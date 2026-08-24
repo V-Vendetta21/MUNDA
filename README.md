@@ -52,3 +52,30 @@ Colour-blind palette · high-contrast UI · interface brightness · animation in
 ---
 
 © MUNDA-inspired fan concept. "MUNDA" and "Textile Lichtsysteme" are trademarks of their respective owners; this is an independent fictional game.
+
+---
+
+## Website (`website/`)
+
+A polished, responsive marketing website for MUNDA Textile Lichtsysteme GmbH, sharing the same design system as the game (dark industrial background, electric-cyan accents, LED glow, glass panels).
+
+Sections: hero with animated light paths · What is MUNDA (TEXTILE → ELECTRONICS → LIGHT) · Why Textile Lighting · Automotive Applications · MUNDA Kosova (animated stats) · Precision Manufacturing timeline · Lectra cutting technology · Volkswagen Group quality · Industry 4.0 network · Interactive Technology Explorer · the game showcase · final CTA · footer.
+
+**Running it:**
+
+```bash
+python -m http.server 8124
+# then open http://localhost:8124/website/
+```
+
+**Connecting the game.** The site's game buttons read two config variables at the top of `website/index.html`:
+
+```js
+var GAME_URL = "../index.html";   // <-- set to your hosted game URL
+var USE_EMBEDDED_GAME = false;    // true = embed the game in an iframe
+```
+
+The game currently lives at the repository root, so `../index.html` is same-origin and can be embedded. Set `USE_EMBEDDED_GAME = true` to show it inline (with a "open in new tab" fallback); keep `false` to show the animated preview and open the game in a new tab. Cross-origin URLs automatically fall back to a new tab.
+
+**Website stack:** semantic HTML + hand-written CSS (CSS variables, IntersectionObserver reveals, reduced-motion support) + vanilla JS (scroll-spy nav, animated counters, timeline illumination, explorer, game launcher). No framework, no build step.
+
