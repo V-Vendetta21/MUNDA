@@ -1,127 +1,254 @@
 /* ============================================================
-   MUNDA — main.js
-   Bootstrap: load state, apply theme, wire input, run.
-   Unified pointer handling for mouse + touch on the board.
+   MUNDA — Official Website · main.js
+   Navigation, scroll animations, counters, timeline, explorer,
+   and the configurable game launcher.
    ============================================================ */
-(function (global) {
+(function () {
   'use strict';
-  const MUNDA = global.MUNDA;
-  const U = MUNDA;
 
-  function boot() {
-    // load persisted state
-    MUNDA.state = MUNDA.storage.loadState();
+  var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-    // apply theme + accessibility classes
-    MUNDA.applyTheme();
-    MUNDA.Screens.init();
-    MUNDA.Screens.refreshMute();
-    MUNDA.Screens.updateMenuBest();
+  /* ---------- Configurable game launcher ----------
+     GAME_URL and USE_EMBEDDED_GAME are defined in index.html.
+     The game plays in a full-screen overlay; cross-origin URLs
+     fall back to opening in a new tab. */
+  function isSameOrigin(url) {
+    if (!url || url === 'YOUR_GAME_URL_HERE') return false;
+    if (url.charAt(0) === '/' || url.indexOf('./') === 0 || url.indexOf('../') === 0 || !/^https?:/.test(url)) return true;
+    try { return new URL(url, location.href).origin === location.origin; }
+    catch (e) { return false; }
+  }
 
-    // background ambient board (drawn behind everything in gameplay)
-    setupAmbient();
+  var overlay = document.getElementById('game-overlay');
+  var overlayBody = document.getElementById('game-overlay-body');
+  var gameExit = document.getElementById('game-exit');
+  var gameLoaded = false;
+  var lastTrigger = null;
 
-    // input on the wiring canvas
-    const canvas = document.getElementById('wires');
-    const Game = MUNDA.game;
-
-    function toLocal(e) {
-      const r = canvas.getBoundingClientRect();
-      return { x: e.clientX - r.left, y: e.clientY - r.top };
+  function enterGame(e) {
+    if (e && e.preventDefault) e.preventDefault();
+    var url = window.GAME_URL;
+    if (!url || url === 'YOUR_GAME_URL_HERE') return;
+    if (!window.USE_EMBEDDED_GAME || !isSameOrigin(url)) {
+      window.open(url, '_blank', 'noopener');
+      return;
     }
+    lastTrigger = (e && e.currentTarget) ? e.currentTarget : null;
+    overlay.hidden = false;
+    overlay.setAttribute('aria-hidden', 'false');
+    document.body.classList.add('game-open');
+    if (!gameLoaded) {
+      var f = document.createElement('iframe');
+      f.setAttribute('src', url);
+      f.setAttribute('title', 'MUNDA wire-assembly game');
+      f.setAttribute('allow', 'fullscreen');
+      overlayBody.appendChild(f);
+      gameLoaded = true;
+    }
+    if (gameExit) gameExit.focus();
+  }
 
-    canvas.addEventListener('pointerdown', (e) => {
-      MUNDA.audio.init();          // ensure context on first gesture
-      MUNDA.audio.resume();
-      e.preventDefault();
-      canvas.setPointerCapture(e.pointerId);
-      const p = toLocal(e);
-      Game.onPointerDown(p.x, p.y);
+  function exitGame() {
+    overlay.hidden = true;
+    overlay.setAttribute('aria-hidden', 'true');
+    document.body.classList.remove('game-open');
+    if (lastTrigger && lastTrigger.focus) lastTrigger.focus();
+    lastTrigger = null;
+  }
+
+  var playTriggers = document.querySelectorAll('#nav-play, #gp-launch, #cta-play, #game-fab');
+  Array.prototype.slice.call(playTriggers).forEach(function (b) {
+    b.addEventListener('click', enterGame);
+  });
+  if (gameExit) gameExit.addEventListener('click', exitGame);
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && !overlay.hidden) exitGame();
+  });
+
+  /* ---------- Navigation ---------- */
+  var nav = document.getElementById('nav');
+  var burger = document.getElementById('nav-burger');
+  var navLinks = document.getElementById('nav-links');
+
+  function onScrollNav() {
+    nav.classList.toggle('scrolled', window.scrollY > 20);
+  }
+  window.addEventListener('scroll', onScrollNav, { passive: true });
+  onScrollNav();
+
+  burger.addEventListener('click', function () {
+    var open = navLinks.classList.toggle('open');
+    burger.classList.toggle('open', open);
+    burger.setAttribute('aria-expanded', open ? 'true' : 'false');
+  });
+  Array.prototype.slice.call(navLinks.querySelectorAll('a')).forEach(function (a) {
+    a.addEventListener('click', function () {
+      navLinks.classList.remove('open');
+      burger.classList.remove('open');
+      burger.setAttribute('aria-expanded', 'false');
     });
+  });
 
-    canvas.addEventListener('pointermove', (e) => {
-      const p = toLocal(e);
-      if (e.buttons === 0) {
-        // hover only
-        Game.onPointerMove(p.x, p.y);
-        // throttled hover sound
-        const h = MUNDA.BoardRenderer.hover;
-        if (h && h.wire !== undefined) {
-          const now = performance.now();
-          if (now - (MUNDA._hoverSoundT || 0) > 120) {
-            MUNDA.audio.hover();
-            MUNDA._hoverSoundT = now;
-          }
+  /* ---------- Scroll spy ---------- */
+  var sections = ['home', 'technology', 'manufacturing', 'kosova', 'innovation', 'game'];
+  var linkBySection = {};
+  sections.forEach(function (id) {
+    var link = navLinks.querySelector('[data-nav="' + id + '"]');
+    if (link) linkBySection[id] = link;
+  });
+  function spy() {
+    var vh = window.innerHeight * 0.4;
+    var current = 'home';
+    var best = -1;
+    sections.forEach(function (id) {
+      var el = document.getElementById(id === 'home' ? 'top' : id);
+      if (!el) return;
+      var r = el.getBoundingClientRect();
+      if (r.top <= vh && r.top > best) { best = r.top; current = id; }
+    });
+    sections.forEach(function (id) {
+      if (linkBySection[id]) linkBySection[id].classList.toggle('active', id === current);
+    });
+  }
+  window.addEventListener('scroll', spy, { passive: true });
+  spy();
+
+  /* ---------- Reveal on scroll ---------- */
+  var revealEls = document.querySelectorAll('.reveal');
+  if ('IntersectionObserver' in window) {
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (en) {
+        // reveal on intersection, or if the element has been scrolled above the
+        // viewport (robust to anchor jumps / instant scrolls)
+        if (en.isIntersecting || en.boundingClientRect.top < 0) {
+          var delay = parseInt(en.target.getAttribute('data-reveal-delay') || '0', 10);
+          en.target.style.transitionDelay = (reduceMotion ? 0 : delay) + 'ms';
+          en.target.classList.add('in');
+          io.unobserve(en.target);
         }
-      } else {
-        Game.onPointerMove(p.x, p.y);
-      }
-    });
-
-    const upHandler = (e) => {
-      const p = toLocal(e);
-      Game.onPointerUp(p.x, p.y);
-    };
-    canvas.addEventListener('pointerup', upHandler);
-    canvas.addEventListener('pointercancel', upHandler);
-    canvas.addEventListener('pointerleave', () => {
-      if (!Game.drag) Game.onPointerUp(-9999, -9999);
-    });
-
-    // resize handling
-    global.addEventListener('resize', () => {
-      MUNDA.BoardRenderer.resize();
-      MUNDA.StripRenderer.resize();
-    });
-    // keyboard
-    global.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' || e.key.toLowerCase() === 'p') {
-        if (Game.phase === 'paused') Game.pause(false);
-        else if (Game.phase === 'playing') Game.pause(true);
-      }
-    });
-  }
-
-  // subtle animated ambient background canvas
-  function setupAmbient() {
-    const cv = document.getElementById('board');
-    const ctx = cv.getContext('2d');
-    let raf, t = 0;
-    function resize() {
-      const dpr = Math.min(global.devicePixelRatio || 1, 2);
-      cv.width = global.innerWidth * dpr;
-      cv.height = global.innerHeight * dpr;
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    }
-    resize();
-    global.addEventListener('resize', resize);
-    const pts = [];
-    for (let i = 0; i < 14; i++) {
-      pts.push({ x: Math.random(), y: Math.random(), r: 1 + Math.random() * 2, s: 0.0004 + Math.random() * 0.0008, a: 0.03 + Math.random() * 0.05, hue: Math.random() });
-    }
-    function loop() {
-      t++;
-      ctx.clearRect(0, 0, cv.width, cv.height);
-      const acc = MUNDA.state ? MUNDA.state.settings.motion : 1;
-      if (acc < 0.05) { raf = requestAnimationFrame(loop); return; }
-      const W = global.innerWidth, H = global.innerHeight;
-      for (const p of pts) {
-        const y = (p.y + t * p.s) % 1;
-        const a = p.a * (0.5 + 0.5 * Math.sin(t * 0.02 + p.hue * 20));
-        ctx.fillStyle = 'rgba(120,170,255,' + a + ')';
-        ctx.beginPath();
-        ctx.arc(p.x * W, y * H, p.r, 0, Math.PI * 2);
-        ctx.fill();
-      }
-      raf = requestAnimationFrame(loop);
-    }
-    raf = requestAnimationFrame(loop);
-  }
-
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', boot);
+      });
+    }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
+    revealEls.forEach(function (el) { io.observe(el); });
   } else {
-    boot();
+    revealEls.forEach(function (el) { el.classList.add('in'); });
   }
 
-})(typeof window !== 'undefined' ? window : this);
+  /* ---------- Animated counters ---------- */
+  var counted = false;
+  function animateCount(el) {
+    var target = parseInt(el.getAttribute('data-count') || '0', 10);
+    var prefix = el.getAttribute('data-prefix') || '';
+    var suffix = el.getAttribute('data-suffix') || '';
+    var dur = reduceMotion ? 1 : 1100;
+    var start = performance.now();
+    function fmt(v) { return prefix + v.toLocaleString('en-US') + suffix; }
+    function tick(now) {
+      var t = Math.min(1, (now - start) / dur);
+      var eased = 1 - Math.pow(1 - t, 3);
+      el.textContent = fmt(Math.round(target * eased));
+      if (t < 1) requestAnimationFrame(tick);
+      else el.textContent = fmt(target);
+    }
+    requestAnimationFrame(tick);
+  }
+  var statNums = document.querySelectorAll('.stat-num');
+  if ('IntersectionObserver' in window) {
+    var statIO = new IntersectionObserver(function (entries) {
+      entries.forEach(function (en) {
+        if (en.isIntersecting && !counted) {
+          counted = true;
+          statNums.forEach(animateCount);
+          statIO.disconnect();
+        }
+      });
+    }, { threshold: 0.4 });
+    statNums.forEach(function (el) { statIO.observe(el); });
+  }
+
+  /* ---------- Process timeline illumination ---------- */
+  var timeline = document.querySelector('.timeline');
+  var tlProgress = document.getElementById('tl-progress');
+  var stages = Array.prototype.slice.call(document.querySelectorAll('.tstage[data-stage]'));
+  if (timeline && tlProgress && 'IntersectionObserver' in window) {
+    var tlIO = new IntersectionObserver(function (entries) {
+      entries.forEach(function (en) {
+        if (!en.isIntersecting) return;
+        tlIO.disconnect();
+        var started = false;
+        function update() {
+          var rect = timeline.getBoundingClientRect();
+          var vh = window.innerHeight;
+          var total = rect.height;
+          var traveled = Math.max(0, Math.min(1, (vh * 0.55 - rect.top) / total));
+          var pct = Math.max(0, Math.min(1, traveled * 1.15));
+          if (!started && pct > 0.02) { started = true; }
+          if (tlProgress) tlProgress.style.width = (pct * 100).toFixed(1) + '%';
+          var activeIndex = Math.min(stages.length - 1, Math.floor(pct * stages.length));
+          stages.forEach(function (s, i) {
+            s.classList.toggle('active', i <= activeIndex);
+          });
+          if (pct >= 1) { window.removeEventListener('scroll', update); }
+        }
+        window.addEventListener('scroll', update, { passive: true });
+        update();
+      });
+    }, { threshold: 0.05 });
+    tlIO.observe(timeline);
+  }
+
+  /* ---------- Technology explorer ---------- */
+  var xDesc = document.getElementById('x-desc');
+  var xInfo = {
+    textile: '<b>TEXTILE</b> — Technical fabrics form the flexible substrate that carries light across the interior.',
+    led: '<b>LED</b> — Miniature LEDs are embedded directly into the textile structure to emit light.',
+    flexible: '<b>FLEXIBLE STRUCTURE</b> — Unlike conventional rigid lighting components, textile lighting can be integrated into flexible interior structures.',
+    electronics: '<b>ELECTRONICS</b> — Electronic integration connects power and control to the lighting elements.'
+  };
+  function selectExplorer(name) {
+    var nodes = document.querySelectorAll('.xnode');
+    var btns = document.querySelectorAll('.x-btn');
+    nodes.forEach(function (n) { n.classList.toggle('sel', n.getAttribute('data-xn') === name); });
+    btns.forEach(function (b) { b.classList.toggle('sel', b.getAttribute('data-xn') === name); });
+    if (xDesc && xInfo[name]) xDesc.innerHTML = xInfo[name];
+  }
+  var xnNodes = document.querySelectorAll('.xnode');
+  xnNodes.forEach(function (n) {
+    var click = function () { selectExplorer(n.getAttribute('data-xn')); };
+    n.addEventListener('click', click);
+    n.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); click(); } });
+    n.setAttribute('tabindex', '0');
+    n.setAttribute('role', 'button');
+  });
+  document.querySelectorAll('.x-btn').forEach(function (b) {
+    b.addEventListener('click', function () { selectExplorer(b.getAttribute('data-xn')); });
+  });
+
+  /* ---------- Hero cursor parallax ---------- */
+  var hero = document.querySelector('.hero');
+  var heroWave = document.querySelector('.hero-wave--persp');
+  if (hero && heroWave && !reduceMotion && window.matchMedia('(hover: hover)').matches) {
+    var raf = null;
+    hero.addEventListener('mousemove', function (e) {
+      if (raf) return;
+      raf = requestAnimationFrame(function () {
+        raf = null;
+        var r = hero.getBoundingClientRect();
+        var nx = (e.clientX - r.left) / r.width - 0.5;
+        var ny = (e.clientY - r.top) / r.height - 0.5;
+        heroWave.style.transform = 'perspective(1300px) rotateX(' + (7 - ny * 3).toFixed(2) + 'deg) rotateY(' + (-6 + nx * 4).toFixed(2) + 'deg) scale(1.12) translate(' + (nx * 14).toFixed(1) + 'px,' + (ny * 10).toFixed(1) + 'px)';
+      });
+    });
+  }
+
+  /* ---------- Smooth anchor scroll fallback for older browsers ---------- */
+  if (!('scrollBehavior' in document.documentElement.style)) {
+    document.querySelectorAll('a[href^="#"]').forEach(function (a) {
+      a.addEventListener('click', function (e) {
+        var id = a.getAttribute('href');
+        if (id.length < 2) return;
+        var el = document.querySelector(id);
+        if (el) { e.preventDefault(); el.scrollIntoView(); }
+      });
+    });
+  }
+})();
