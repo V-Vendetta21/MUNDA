@@ -349,6 +349,18 @@ body::before {
   backdrop-filter: blur(6px);
 }
 .modal-layer.active { display: flex; }
+
+/* ============ PAUSE OVERLAY (only when actively paused) ============ */
+.pause-overlay {
+  position: absolute; inset: 0;
+  z-index: 35;
+  display: none;
+  align-items: center; justify-content: center;
+  padding: 22px;
+  background: rgba(3,5,10,0.72);
+  backdrop-filter: blur(6px);
+}
+.pause-overlay.active { display: flex; }
 .modal {
   width: min(460px, 94vw);
   max-height: 88vh;
