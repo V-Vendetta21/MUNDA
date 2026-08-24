@@ -1,81 +1,69 @@
-# MUNDA — Textile Lighting Systems · Precision Assembly
+# MUNDA — Textile Lighting Systems
 
-An interactive wire-assembly game inspired by MUNDA **Textile Lichtsysteme GmbH** and its precision LED textile lighting production. Reinterpret the familiar "connect the matching wires" mechanic as a professional, futuristic automotive–textile manufacturing simulation.
+A polished interactive website **and** a precision wire-assembly game, inspired by MUNDA **Textile Lichtsysteme GmbH** and its LED textile lighting production.
 
-> A gamified, fictional simulation inspired by the technology — not a reproduction of MUNDA's real manufacturing process.
+> A gamified, fictional concept inspired by the technology — not a reproduction of MUNDA's real manufacturing process.
 
-## Running the game
+## Running it
 
-Open **`index.html`** directly in any modern browser, or serve the folder:
+The website is the entry point — the game is integrated inside it. Serve the repo root and open the site:
 
 ```bash
 python -m http.server 8123
 # then open http://localhost:8123/
 ```
 
-Works on desktop, laptop, tablet and mobile (mouse + touch). No build step, no dependencies, no network assets required — all audio is synthesized live with the Web Audio API and all rendering is Canvas/CSS.
+- The **website** appears first (landing page).
+- Click the small **PLAY THE GAME →** button (in the nav, or the floating ▶ PLAY button) to enter the game in a full-screen overlay, then **✕ EXIT GAME** (or press Escape) to return to the site.
+- The game can also be opened directly at `http://localhost:8123/game/`.
 
-## Game modes
+Works on desktop, laptop, tablet and mobile. No build step, no dependencies — audio is synthesized live with the Web Audio API and all rendering is Canvas/CSS.
 
-- **Production Shift** — progressive stages from a 3-wire basic assembly to dense 9-wire routing. Complete a stage to pass quality control and advance; one wrong connection fails the assembly and resets the run to Stage 1.
-- **Endless Mode** — procedurally generated boards that scale difficulty forever. A mistake stops the line and shows your final results.
-
-## Features
-
-- **Precision wiring mechanic** — drag or tap two matching terminals. Only a deliberate wrong connection counts as an error (releasing on empty space never punishes you).
-- **Flexible textile LED strip** — a wavy, fabric-like lighting band that brightens section by section, illuminates end-to-end on completion, and flickers out on failure.
-- **Accessibility by default** — every terminal is matched by **colour, number and symbol** (never colour alone), plus a colorblind-safe palette, high-contrast mode, adjustable brightness and reduced-motion settings.
-- **Full customization** — 9 individually-remappable wire colours, LED strip colour, interface accent, and 6 background themes (some unlock with progression).
-- **Scoring & streaks** — connection, level, precision (speed) and perfect-assembly bonuses; consecutive clean stages build a streak multiplier.
-- **Persistence** — best score, highest stage, endless records and customization are saved to `localStorage`.
-- **Procedural, guaranteed-solvable puzzles** — every board is validated as a solvable bijection with no overlapping terminals, at any difficulty.
-
-## Project structure
+## Structure
 
 ```
-index.html
-css/style.css
-js/
-  core/    Config, Utils, Palette, Storage, Audio (Web Audio synth)
-  game/    Difficulty, PuzzleGen (procedural + validation), Game (rules/scoring)
-  render/  BoardRenderer (terminals & wires), StripRenderer (LED textile strip)
-  ui/      Screens (menu/HUD/modals), Customization (colours + settings)
-  main.js  bootstrap + unified mouse/touch input
+index.html          ← website (landing page)
+css/style.css       ← website styles
+js/main.js          ← website interactions
+assets/             ← website imagery
+game/               ← the MUNDA wire-assembly game
+  index.html
+  css/style.css
+  js/
+    core/     Config, Utils, Palette, Storage, Audio (Web Audio synth)
+    game/     Difficulty, PuzzleGen (procedural + validation), Game (rules/scoring)
+    render/   BoardRenderer (terminals & wires), StripRenderer (LED textile strip)
+    ui/       Screens (menu/HUD/modals), Customization (colours + settings)
+    main.js   bootstrap + unified mouse/touch input
 ```
 
-Code is organized into small, single-responsibility modules — no framework, no build step.
+## Connecting the game
 
-## Accessibility & settings
-
-Colour-blind palette · high-contrast UI · interface brightness · animation intensity (reduce motion) · sound volume & mute.
-
----
-
-© MUNDA-inspired fan concept. "MUNDA" and "Textile Lichtsysteme" are trademarks of their respective owners; this is an independent fictional game.
-
----
-
-## Website (`website/`)
-
-A polished, responsive marketing website for MUNDA Textile Lichtsysteme GmbH, sharing the same design system as the game (dark industrial background, electric-cyan accents, LED glow, glass panels).
-
-Sections: hero with animated light paths · What is MUNDA (TEXTILE → ELECTRONICS → LIGHT) · Why Textile Lighting · Automotive Applications · MUNDA Kosova (animated stats) · Precision Manufacturing timeline · Lectra cutting technology · Volkswagen Group quality · Industry 4.0 network · Interactive Technology Explorer · the game showcase · final CTA · footer.
-
-**Running it:**
-
-```bash
-python -m http.server 8124
-# then open http://localhost:8124/website/
-```
-
-**Connecting the game.** The site's game buttons read two config variables at the top of `website/index.html`:
+The site's game buttons read two config variables at the top of `index.html`:
 
 ```js
-var GAME_URL = "../index.html";   // <-- set to your hosted game URL
-var USE_EMBEDDED_GAME = false;    // true = embed the game in an iframe
+var GAME_URL = "game/index.html";   // <-- set to your hosted game URL
+var USE_EMBEDDED_GAME = true;       // true = game plays inside the website
 ```
 
-The game currently lives at the repository root, so `../index.html` is same-origin and can be embedded. Set `USE_EMBEDDED_GAME = true` to show it inline (with a "open in new tab" fallback); keep `false` to show the animated preview and open the game in a new tab. Cross-origin URLs automatically fall back to a new tab.
+`USE_EMBEDDED_GAME = true` (default) opens the game in a full-screen overlay inside the website; cross-origin URLs automatically fall back to opening in a new tab.
 
-**Website stack:** semantic HTML + hand-written CSS (CSS variables, IntersectionObserver reveals, reduced-motion support) + vanilla JS (scroll-spy nav, animated counters, timeline illumination, explorer, game launcher). No framework, no build step.
+## Website
 
+A responsive marketing site sharing the game's design system (dark industrial background, electric-cyan accents, LED glow, glass panels). Sections: hero with animated light paths · What is MUNDA (TEXTILE → ELECTRONICS → LIGHT) · Why Textile Lighting · Automotive Applications · MUNDA Kosova (animated stats) · Precision Manufacturing timeline · Lectra cutting technology · Volkswagen Group quality · Industry 4.0 network · Interactive Technology Explorer · the game showcase · final CTA · footer.
+
+## Game
+
+- **Production Shift** — progressive stages from a 3-wire basic assembly to dense 9-wire routing. One wrong connection fails the assembly and resets the run to Stage 1.
+- **Endless Mode** — procedurally generated boards that scale difficulty forever.
+- **Precision wiring mechanic** — drag or tap two matching terminals; only a deliberate wrong connection counts as an error.
+- **Flexible textile LED strip** — a wavy, fabric-like lighting band that brightens per connection, illuminates end-to-end on completion, and flickers out on failure.
+- **Accessibility by default** — every terminal matched by **colour, number and symbol**, plus a colorblind palette, high-contrast mode, brightness and reduced-motion settings.
+- **Full customization** — 9 remappable wire colours, LED strip colour, interface accent, 6 background themes.
+- **Scoring & streaks** — connection, level, precision (speed) and perfect-assembly bonuses, plus a streak multiplier.
+- **Persistence** — best score, highest stage, endless records and customization saved to `localStorage`.
+- **Procedural, guaranteed-solvable puzzles** — every board validated as a solvable bijection with no overlapping terminals.
+
+---
+
+© MUNDA-inspired fan concept. "MUNDA" and "Textile Lichtsysteme" are trademarks of their respective owners; this is an independent fictional project.

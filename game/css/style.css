@@ -67,6 +67,27 @@ body {
   z-index: 0;
 }
 
+/* pulsing ambient background glow — breathes in the selected theme accent */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 55% 45% at 28% 24%, var(--accent-soft), transparent 70%),
+    radial-gradient(ellipse 50% 42% at 74% 78%, var(--accent-soft), transparent 70%);
+  background:
+    radial-gradient(ellipse 55% 45% at 28% 24%, color-mix(in srgb, var(--accent) 20%, transparent), transparent 70%),
+    radial-gradient(ellipse 50% 42% at 74% 78%, color-mix(in srgb, var(--accent-2) 20%, transparent), transparent 70%);
+  animation: bgPulse 5.5s ease-in-out infinite;
+  will-change: opacity;
+}
+@keyframes bgPulse {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; }
+}
+
 /* board canvas sits under everything in gameplay */
 #board {
   position: absolute; inset: 0;
@@ -530,6 +551,7 @@ body.reduce .btn, body.reduce .theme-card, body.reduce .modal, body.reduce .pane
   animation: none !important; transition-duration: 0.05s !important;
 }
 body.reduce .strip-status, body.reduce .qc-bonus { animation: none !important; }
+body.reduce::before { animation: none !important; opacity: 0.6; }
 
 /* ============ HIGH CONTRAST ============ */
 body.high-contrast { --text: #ffffff; --text2: #e6ecf5; --text3: #aab6c8; --border: rgba(255,255,255,0.22); --border-strong: rgba(255,255,255,0.4); }
