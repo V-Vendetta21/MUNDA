@@ -20,35 +20,8 @@
           <div class="panel-head"><h2>CUSTOMIZATION</h2><button class="panel-close" data-c="close">✕</button></div>
 
           <div class="panel-section">
-            <h3>BACKGROUND THEME</h3>
-            <div class="theme-grid" id="c-themes"></div>
-          </div>
-
-          <div class="panel-section">
-            <h3>LED STRIP COLOR</h3>
-            <div class="color-list">
-              <div class="color-row">
-                <div class="color-swatch" data-led="1" title="Change LED strip color"></div>
-                <span class="c-name">Textile LED strip</span>
-                <input type="color" id="c-led" value="">
-              </div>
-            </div>
-          </div>
-
-          <div class="panel-section">
-            <h3>INTERFACE ACCENT</h3>
-            <div class="color-list">
-              <div class="color-row">
-                <div class="color-swatch" data-acc="1" title="Change interface accent"></div>
-                <span class="c-name">Interface accent</span>
-                <input type="color" id="c-acc" value="">
-              </div>
-              <button class="btn btn--sm btn--ghost" id="c-acc-reset">RESET ACCENT TO THEME</button>
-            </div>
-          </div>
-
-          <div class="panel-section">
             <h3>WIRE COLORS</h3>
+            <p class="panel-note">Adjust the wire colours. Symbols and numbers stay visible for accessibility.</p>
             <div class="color-list" id="c-wires"></div>
             <button class="btn btn--sm btn--ghost" id="c-wires-reset" style="margin-top:10px">RESET WIRE COLORS</button>
           </div>
@@ -56,7 +29,6 @@
           <button class="btn btn--primary" data-c="done">DONE</button>
         </div>`;
       this.show(html);
-      this.buildThemes();
       this.buildWires();
       this.bindColorPickers();
     },
@@ -127,42 +99,6 @@
       MUNDA.audio.back();
     },
 
-    // ---------- themes ----------
-    buildThemes: function () {
-      const grid = document.getElementById('c-themes');
-      const cur = MUNDA.state.custom.theme;
-      const prog = MUNDA.state.progress;
-      const unlocked = (t) => {
-        if (t === 'professional' || t === 'automotive' || t === 'cyan' || t === 'industrial') return true;
-        if (t === 'neon') return prog.highestLevel >= 4;
-        if (t === 'minimal') return prog.endlessLongest >= 5;
-        return true;
-      };
-      const unlockText = (t) => t === 'neon' ? 'Stage 04' : 'Endless 05';
-
-      grid.innerHTML = '';
-      MUNDA.THEME_ORDER.forEach((id) => {
-        const t = MUNDA.THEMES[id];
-        const locked = !unlocked(id);
-        const el = document.createElement('div');
-        el.className = 'theme-card' + (id === cur ? ' sel' : '') + (locked ? ' locked' : '');
-        el.setAttribute('data-theme', id);
-        el.innerHTML = `
-          <div class="theme-swatch" style="background:linear-gradient(160deg,${t.bg1},${t.bg2})"></div>
-          <span>${locked ? '🔒 ' + t.name.toUpperCase() + ' · ' + unlockText(id) : t.name.toUpperCase()}</span>`;
-        el.addEventListener('click', () => {
-          if (locked) { MUNDA.Screens.toast('UNLOCKED AT ' + unlockText(id).toUpperCase(), false); return; }
-          MUNDA.state.custom.theme = id;
-          MUNDA.storage.saveCustom(MUNDA.state.custom);
-          MUNDA.applyTheme();
-          U.$all('.theme-card', grid).forEach((c) => c.classList.remove('sel'));
-          el.classList.add('sel');
-          MUNDA.audio.select();
-        });
-        grid.appendChild(el);
-      });
-    },
-
     // ---------- wires ----------
     buildWires: function () {
       const list = document.getElementById('c-wires');
@@ -183,44 +119,10 @@
 
     bindColorPickers: function () {
       const layer = document.getElementById('modal-layer');
-      // theme close / done
+      // close / done
       layer.addEventListener('click', (e) => {
         const closeBtn = e.target.closest('[data-c="close"], [data-c="done"]');
         if (closeBtn) this.close();
-      });
-      // LED color swatch opens picker
-      const ledSwatch = layer.querySelector('[data-led="1"]');
-      const ledInput = layer.querySelector('#c-led');
-      ledInput.value = MUNDA.state.custom.ledColor || '#ffd9a0';
-      ledSwatch.style.background = ledInput.value;
-      ledSwatch.addEventListener('click', () => ledInput.click());
-      ledInput.addEventListener('input', () => {
-        ledSwatch.style.background = ledInput.value;
-        MUNDA.state.custom.ledColor = ledInput.value;
-        MUNDA.storage.saveCustom(MUNDA.state.custom);
-        MUNDA.audio.select();
-      });
-
-      // accent swatch
-      const accSwatch = layer.querySelector('[data-acc="1"]');
-      const accInput = layer.querySelector('#c-acc');
-      accInput.value = MUNDA.accentColor();
-      accSwatch.style.background = accInput.value;
-      accSwatch.addEventListener('click', () => accInput.click());
-      accInput.addEventListener('input', () => {
-        accSwatch.style.background = accInput.value;
-        MUNDA.state.custom.accent = accInput.value;
-        MUNDA.storage.saveCustom(MUNDA.state.custom);
-        MUNDA.applyTheme();
-        MUNDA.audio.select();
-      });
-      layer.querySelector('#c-acc-reset').addEventListener('click', () => {
-        MUNDA.state.custom.accent = null;
-        MUNDA.storage.saveCustom(MUNDA.state.custom);
-        MUNDA.applyTheme();
-        accInput.value = MUNDA.accentColor();
-        accSwatch.style.background = accInput.value;
-        MUNDA.audio.click();
       });
 
       // wire color swatches
