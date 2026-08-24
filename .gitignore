@@ -1,0 +1,16 @@
+# Python http.server
+__pycache__/
+*.pyc
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+
+# Local test screenshots / harness leftovers
+tmp_*.png
+tmp_*.js
+munda_cdp_test.js
