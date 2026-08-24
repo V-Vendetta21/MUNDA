@@ -40,11 +40,11 @@
       soundVolume: 0.7,
     },
     custom: {
-      theme: 'professional',        // theme id
-      accent: null,                 // custom interface accent override (hex) or null = theme default
-      ledColor: '#ffd9a0',          // LED textile strip emission color
-      ledSecond: '#ffb347',         // LED secondary warm tone
-      wires: null,                  // per-wire color overrides {id: hex} or null = defaults
+      theme: 'mono',             // single monochrome theme
+      accent: null,              // unused — accent is always white
+      ledColor: '#ffffff',       // LED textile strip (monochrome)
+      ledSecond: '#e0e0e2',
+      wires: null,               // per-wire color overrides {id: hex} or null = defaults
     },
     progress: {
       highestLevel: 1,      // production shift highest level reached
