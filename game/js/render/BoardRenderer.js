@@ -118,11 +118,21 @@
       return { x0, y0, x3, y3, c1: { x: midX - this.cssW * 0.10, y: c1y }, c2: { x: midX + this.cssW * 0.10, y: c2y } };
     },
 
+    // Draw only the two end sections. The hidden centre prevents players
+    // from visually tracing a wire all the way to its matching terminal.
     _tracePath: function (path) {
       const c = this.ctx;
+      const ranges = [[0, 0.34], [0.66, 1]];
+      const steps = 18;
       c.beginPath();
-      c.moveTo(path.x0, path.y0);
-      c.bezierCurveTo(path.c1.x, path.c1.y, path.c2.x, path.c2.y, path.x3, path.y3);
+      for (const range of ranges) {
+        for (let i = 0; i <= steps; i++) {
+          const t = range[0] + (range[1] - range[0]) * (i / steps);
+          const point = this.bezierPoint(path, t);
+          if (i === 0) c.moveTo(point.x, point.y);
+          else c.lineTo(point.x, point.y);
+        }
+      }
     },
 
     // ---- animation triggers ----

@@ -12,12 +12,12 @@
   // single monochrome theme — black, white, grey
   const THEME = {
     id: 'mono', name: 'MUNDA',
-    bg1: '#050506', bg2: '#0b0b0d',
-    panel: 'rgba(255,255,255,0.04)', panelSolid: '#101013',
-    surface: 'rgba(255,255,255,0.07)', surfaceSolid: '#18181b',
+    bg1: '#050505', bg2: '#323232',
+    panel: 'rgba(255,255,255,0.04)', panelSolid: '#111111',
+    surface: 'rgba(255,255,255,0.07)', surfaceSolid: '#242424',
     border: 'rgba(255,255,255,0.12)', borderStrong: 'rgba(255,255,255,0.24)',
     text: '#ffffff', text2: '#c7c7ca', text3: '#828287',
-    accent: '#ffffff', accent2: '#c9c9cc',
+    accent: '#ffffff', accent2: '#000000',
   };
   MUNDA.THEMES = { mono: THEME };
   MUNDA.THEME_ORDER = ['mono'];
@@ -54,7 +54,7 @@
 
   function currentTheme() { return THEME; }
   function accentColor() { return '#ffffff'; }
-  function accent2Color() { return '#c9c9cc'; }
+  function accent2Color() { return '#000000'; }
 
   // write all CSS variables to :root
   function applyTheme() {
@@ -78,7 +78,7 @@
     set('--text2', t.text2);
     set('--text3', t.text3);
     set('--accent', '#ffffff');
-    set('--accent-2', '#c9c9cc');
+    set('--accent-2', '#000000');
     set('--accent-soft', 'rgba(255,255,255,0.16)');
     set('--ok', '#ffffff');
     set('--bad', '#8a8a8e');

@@ -8,23 +8,23 @@
   --font-display: 'Space Grotesk', 'Inter', system-ui, sans-serif;
   --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 
-  --bg1: #070b12;
-  --bg2: #0d1626;
-  --bg3: #0a101d;
+  --bg1: #050505;
+  --bg2: #2f2f2f;
+  --bg3: #151515;
   --panel: rgba(255,255,255,0.035);
   --surface: rgba(255,255,255,0.055);
   --surface-2: rgba(255,255,255,0.08);
   --border: rgba(255,255,255,0.09);
   --border-strong: rgba(255,255,255,0.17);
   --text: #f4f7fb;
-  --text2: #b9c3d4;
-  --text3: #6f7c92;
-  --accent: #29c6ff;
-  --accent-2: #5b8cff;
-  --accent-soft: rgba(41,198,255,0.14);
-  --purple: #9b5cff;
-  --magenta: #ff3da6;
-  --ok: #2fe06a;
+  --text2: #d0d0d0;
+  --text3: #929292;
+  --accent: #ffffff;
+  --accent-2: #8a8a8a;
+  --accent-soft: rgba(255,255,255,0.14);
+  --purple: #000000;
+  --magenta: #666666;
+  --ok: #ffffff;
   --radius: 18px;
   --radius-s: 12px;
   --shadow: 0 1px 0 rgba(255,255,255,0.04) inset, 0 24px 60px rgba(0,0,0,0.45);
@@ -108,7 +108,7 @@ ul { list-style: none; }
   padding: 12px 20px; gap: 16px;
 }
 .nav-brand { display: flex; align-items: center; gap: 11px; }
-.nav-logo svg { display: block; filter: drop-shadow(0 0 10px var(--accent-soft)); }
+.nav-logo { display: block; width: 82px; height: 44px; object-fit: cover; border-radius: 5px; box-shadow: 0 0 0 1px rgba(255,255,255,.16); }
 .nav-brand-text { display: flex; flex-direction: column; line-height: 1.1; }
 .nav-name { font-family: var(--font-display); font-size: 20px; font-weight: 700; letter-spacing: 0.04em; }
 .nav-sub { font-family: var(--font-mono); font-size: 8.5px; letter-spacing: 0.26em; color: var(--text3); }
@@ -148,8 +148,8 @@ ul { list-style: none; }
 .hero-wave { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; opacity: 0.95; }
 .hero-wave img {
   width: 118%; height: 118%; object-fit: cover;
-  mix-blend-mode: screen;
-  filter: saturate(1.05) brightness(0.92);
+  mix-blend-mode: normal;
+  filter: saturate(1.04) brightness(0.78) contrast(1.08);
 }
 .hero-wave--persp { transform: perspective(1300px) rotateX(7deg) rotateY(-6deg) scale(1.12); will-change: transform; }
 .hero-wave--persp::after {
@@ -184,7 +184,7 @@ ul { list-style: none; }
   margin-bottom: 24px;
 }
 .hero-title .grad {
-  background: linear-gradient(100deg, var(--accent) 10%, var(--accent-2) 50%, var(--purple) 90%);
+  background: linear-gradient(100deg, #ffffff 8%, #8d8d8d 52%, #000000 100%);
   -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; color: transparent;
 }
 .hero-sub { font-size: clamp(17px, 2.4vw, 24px); color: var(--text2); font-weight: 300; max-width: 560px; margin-bottom: 18px; }
@@ -433,7 +433,7 @@ ul { list-style: none; }
 .gp-score b { color: var(--text); font-size: 14px; }
 .gp-board { position: relative; padding: 6px 6px 0; }
 .gp-svg { width: 100%; height: auto; display: block; }
-.gpw { filter: drop-shadow(0 0 5px currentColor); }
+.gpw { filter: drop-shadow(0 0 5px currentColor); stroke-dasharray: 34 32 34; }
 .gpw1 { animation: gpwire 5s ease-in-out infinite; }
 .gpw2 { animation: gpwire 5s ease-in-out 1.1s infinite; }
 .gpw3 { animation: gpwire 5s ease-in-out 2.2s infinite; }
@@ -467,6 +467,7 @@ ul { list-style: none; }
 .footer { border-top: 1px solid var(--border); background: #05070d; padding: 56px 20px 30px; }
 .footer-top { display: flex; justify-content: space-between; gap: 32px; align-items: flex-start; flex-wrap: wrap; margin-bottom: 40px; }
 .footer-brand { display: flex; flex-direction: column; }
+.footer-logo { width: 132px; height: 72px; object-fit: cover; border-radius: 6px; box-shadow: 0 0 0 1px rgba(255,255,255,.14); }
 .footer-name { font-family: var(--font-display); font-size: 26px; font-weight: 700; letter-spacing: 0.04em; }
 .footer-sub { font-family: var(--font-mono); font-size: 9.5px; letter-spacing: 0.26em; color: var(--text3); margin-top: 6px; }
 .footer-links { display: flex; gap: 6px; flex-wrap: wrap; }
@@ -568,7 +569,9 @@ ul { list-style: none; }
 }
 .game-overlay-brand {
   font-family: var(--font-display); font-size: 13px; font-weight: 700; letter-spacing: 0.16em; color: var(--text2);
+  display: flex; align-items: center; gap: 10px;
 }
+.game-overlay-brand img { width: 68px; height: 32px; object-fit: cover; border-radius: 4px; }
 .game-overlay-brand i { color: var(--accent); font-style: normal; }
 .game-exit {
   font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.12em; font-weight: 600;
@@ -601,3 +604,43 @@ body.game-open .game-fab { display: none; }
 @media (max-width: 640px) {
   .game-fab { right: 14px; bottom: 14px; padding: 11px 16px 11px 13px; }
 }
+
+/* ============ MUNDA MONOCHROME GRADIENT THEME ============ */
+body {
+  background: linear-gradient(145deg, #f7f7f7 0%, #777777 16%, #1d1d1d 46%, #000000 100%);
+}
+.btn--primary, .btn--nav, .game-fab, .x-btn.sel {
+  background: linear-gradient(135deg, #ffffff 0%, #8a8a8a 58%, #000000 100%);
+  color: #050505;
+  text-shadow: 0 1px 0 rgba(255,255,255,.7);
+}
+.btn--primary:hover, .btn--nav:hover {
+  background: linear-gradient(135deg, #ffffff 0%, #a4a4a4 50%, #111111 100%);
+  color: #050505;
+}
+.nav, .nav.scrolled, .nav-links, .game-overlay-bar {
+  background: linear-gradient(135deg, rgba(255,255,255,.92) 0%, rgba(91,91,91,.94) 34%, rgba(0,0,0,.96) 100%);
+}
+.nav-link, .nav-link:hover { color: #ffffff; text-shadow: 0 1px 3px #000; }
+.nav-link.active { color: #ffffff; }
+.nav-link.active::after, .timeline-progress, .l-beam, .auto-light {
+  background: linear-gradient(90deg, #ffffff, #858585, #000000);
+}
+.section--alt, .section--kosova, .section--quality, .section--game,
+.section--auto, .section--i40 {
+  background: linear-gradient(145deg, #343434 0%, #171717 44%, #050505 100%);
+}
+.card, .stat, .pipe-stage, .net-node, .game-preview, .cta-box {
+  background: linear-gradient(145deg, rgba(255,255,255,.11), rgba(112,112,112,.07) 48%, rgba(0,0,0,.28));
+}
+.hero-lines, .auto-scene, .lectra-machine, .net, .explorer-svg, .quality-badge {
+  filter: grayscale(1);
+}
+.hero-wave { filter: none; }
+.overline, .card-ico, .pipe-ico, .pipe-arrow, .net-ico,
+.explorer-desc b, .gp-level b, .footer-links a:hover { color: #ffffff; }
+.stat-num, .modal h2 {
+  background: linear-gradient(180deg, #ffffff 0%, #8b8b8b 58%, #000000 100%);
+  -webkit-background-clip: text; background-clip: text;
+}
+.footer, .game-overlay { background: #050505; }

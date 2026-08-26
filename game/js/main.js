@@ -108,7 +108,7 @@
       for (const p of pts) {
         const y = (p.y + t * p.s) % 1;
         const a = p.a * (0.5 + 0.5 * Math.sin(t * 0.02 + p.hue * 20));
-        ctx.fillStyle = 'rgba(120,170,255,' + a + ')';
+        ctx.fillStyle = 'rgba(255,255,255,' + a + ')';
         ctx.beginPath();
         ctx.arc(p.x * W, y * H, p.r, 0, Math.PI * 2);
         ctx.fill();

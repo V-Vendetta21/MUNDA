@@ -102,7 +102,7 @@
 
     updateHud: function (g) {
       this.els.hudMode.textContent = g.mode === 'production' ? 'PRODUCTION SHIFT' : 'ENDLESS MODE';
-      this.els.hudLevel.innerHTML = 'LEVEL <b>' + String(g.level).padStart(2, '0') + '</b>';
+      this.els.hudLevel.innerHTML = '<b>' + String(g.level).padStart(2, '0') + '</b>';
       this.els.hudScore.textContent = U.fmt(g.score);
       this.els.hudStreak.textContent = 'STREAK ×' + g.streak + ' · ' + g.multiplierLabel;
       this.els.hudStreak.classList.toggle('zero', g.streak === 0);
