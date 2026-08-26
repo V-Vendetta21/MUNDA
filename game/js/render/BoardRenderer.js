@@ -118,21 +118,11 @@
       return { x0, y0, x3, y3, c1: { x: midX - this.cssW * 0.10, y: c1y }, c2: { x: midX + this.cssW * 0.10, y: c2y } };
     },
 
-    // Draw only the two end sections. The hidden centre prevents players
-    // from visually tracing a wire all the way to its matching terminal.
     _tracePath: function (path) {
       const c = this.ctx;
-      const ranges = [[0, 0.34], [0.66, 1]];
-      const steps = 18;
       c.beginPath();
-      for (const range of ranges) {
-        for (let i = 0; i <= steps; i++) {
-          const t = range[0] + (range[1] - range[0]) * (i / steps);
-          const point = this.bezierPoint(path, t);
-          if (i === 0) c.moveTo(point.x, point.y);
-          else c.lineTo(point.x, point.y);
-        }
-      }
+      c.moveTo(path.x0, path.y0);
+      c.bezierCurveTo(path.c1.x, path.c1.y, path.c2.x, path.c2.y, path.x3, path.y3);
     },
 
     // ---- animation triggers ----
@@ -227,7 +217,9 @@
         if (sa !== sb) return sa - sb;
         return a - b;
       });
-      for (const i of drawOrder) this.drawWire(c, i);
+      for (const i of drawOrder) {
+        if (p.wires[i].connected) this.drawWire(c, i);
+      }
     },
 
     drawWire: function (c, index) {
@@ -288,7 +280,7 @@
     },
 
     drawDragLine: function (c) {
-      if (!this.drag || this.selection === null) return;
+      if (!this.drag) return;
       const w = this.puzzle.wires[this.drag.wire];
       const srcPos = this.drag.side === 'left' ? this.termPos(this.drag.wire, 'left') : this.termPosRight(this.drag.wire);
       const end = { x: this.drag.lastX, y: this.drag.lastY };
@@ -303,7 +295,7 @@
       c.beginPath(); c.moveTo(srcPos.x, srcPos.y);
       c.bezierCurveTo(midX, srcPos.y, midX, end.y, end.x, end.y); c.stroke();
       c.shadowBlur = 22;
-      c.fillStyle = '#ffffff';
+      c.fillStyle = '#d8d8d4';
       c.beginPath(); c.arc(end.x, end.y, 6, 0, Math.PI * 2); c.fill();
       c.fillStyle = w.base;
       c.beginPath(); c.arc(end.x, end.y, 3.6, 0, Math.PI * 2); c.fill();
@@ -320,8 +312,8 @@
     drawTerminal: function (c, wireIndex, side, pos, r) {
       const w = this.puzzle.wires[wireIndex];
       const connected = w.connected;
-      const isSel = this.selection && this.selection.wire === wireIndex;
-      const isHover = this.hover && this.hover.wire === wireIndex;
+      const isSel = this.selection && this.selection.wire === wireIndex && this.selection.side === side;
+      const isHover = this.hover && this.hover.wire === wireIndex && this.hover.side === side;
       const isErr = this.failure && this.failure.active && (this.failure.a === wireIndex || this.failure.b === wireIndex);
       const completeT = this.complete ? U.clamp(this.complete.t * this.puzzle.count - wireIndex, 0, 1) : 0;
       const lit = connected || isSel || (this.complete && this.complete.active && completeT > 0);
@@ -365,7 +357,7 @@
         c.restore();
       }
 
-      this.drawSymbol(c, w.sym, pos.x, pos.y, r * 0.5, w.dark, lit ? w.base : '#ffffff');
+      this.drawSymbol(c, w.sym, pos.x, pos.y, r * 0.5, w.dark, lit ? w.base : '#d8d8d4');
       this.drawBadge(c, w.label, pos, side, r, connected, isErr, isSel);
       c.restore();
     },
@@ -426,16 +418,16 @@
       const bx2 = side === 'right' ? pos.x - r - 8 : pos.x + r + 8;
       const by2 = pos.y;
       c.save();
-      c.font = '600 11px "JetBrains Mono", monospace';
+      c.font = '600 11px Roboto, Arial, sans-serif';
       const txt = String(num);
       const tw = c.measureText(txt).width + 12;
       const chipW = Math.max(18, tw);
       c.shadowBlur = connected ? 10 : 4;
-      c.shadowColor = connected ? '#ffffff' : 'rgba(0,0,0,0.5)';
-      c.fillStyle = connected ? U.mix('#ffffff', '#000', 0.15) : 'rgba(255,255,255,0.10)';
+      c.shadowColor = connected ? '#d8d8d4' : 'rgba(0,0,0,0.5)';
+      c.fillStyle = connected ? U.mix('#d8d8d4', '#000', 0.15) : 'rgba(255,255,255,0.10)';
       this.roundRect(bx - chipW / 2, by - 8, chipW, 16, 8);
       c.fill();
-      c.strokeStyle = connected ? '#ffffff' : 'rgba(255,255,255,0.25)';
+      c.strokeStyle = connected ? '#d8d8d4' : 'rgba(255,255,255,0.25)';
       c.lineWidth = 1;
       c.stroke();
       c.shadowBlur = 0;

@@ -67,8 +67,13 @@
       if (this.phase !== 'playing') return;
       const hit = this.hitTest(x, y);
       if (!hit) return;
-      this.drag = { wire: hit.wire, side: hit.side, moved: false, x, y };
+      if (this.puzzle.wires[hit.wire].connected) return;
+      const priorSelection = this.selection;
+      this.selection = { wire: hit.wire, side: hit.side };
+      MUNDA.BoardRenderer.setSelection(this.selection);
+      this.drag = { wire: hit.wire, side: hit.side, moved: false, x, y, priorSelection };
       MUNDA.BoardRenderer.setDrag(this.drag);
+      MUNDA.Screens.setHint('DRAG TO THE MATCHING POST');
       MUNDA.audio.select();
     },
 
@@ -97,30 +102,39 @@
 
       if (src.moved) {
         // dragged: connect if released on a terminal, else cancel (no penalty)
-        if (hit && hit.wire !== src.wire) this.attempt(src.wire, hit.wire);
-        else if (hit && hit.wire === src.wire) this.attempt(src.wire, src.wire);
+        if (hit && hit.side !== src.side) this.attempt(src.wire, hit.wire);
         else this.clearSelection();
         return;
       }
 
       // plain click (tap): use armed selection logic
-      const cur = this.selection;
-      if (!cur) {
-        this.selection = { wire: src.wire, side: src.side };
-        MUNDA.BoardRenderer.setSelection(this.selection);
+      const prior = src.priorSelection;
+      if (!prior) {
+        MUNDA.Screens.setHint('SOURCE SELECTED — CHOOSE A RIGHT POST');
         return;
       }
-      if (cur.wire === src.wire && cur.side === src.side) {
+      if (prior.wire === src.wire && prior.side === src.side) {
         this.clearSelection();           // tap same terminal again → deselect
         return;
       }
-      if (cur.side === src.side) {
-        this.selection = { wire: src.wire, side: src.side }; // switch on same rail
-        MUNDA.BoardRenderer.setSelection(this.selection);
+      if (prior.side === src.side) {
+        MUNDA.Screens.setHint('SOURCE UPDATED — CHOOSE A RIGHT POST');
         return;
       }
       // opposite rail → attempt
-      this.attempt(cur.wire, src.wire);
+      this.attempt(prior.wire, src.wire);
+    },
+
+    selectByNumber(number) {
+      if (this.phase !== 'playing' || !this.puzzle) return false;
+      const index = this.puzzle.wires.findIndex((wire) => wire.label === number && !wire.connected);
+      if (index < 0) return false;
+      this.selection = { wire: index, side: 'left' };
+      MUNDA.BoardRenderer.setSelection(this.selection);
+      const wire = this.puzzle.wires[index];
+      MUNDA.Screens.setHint(`${number} · ${wire.name.toUpperCase()} SELECTED — CHOOSE A RIGHT POST`);
+      MUNDA.audio.select();
+      return true;
     },
 
     attempt(fromWire, toWire) {
@@ -162,6 +176,7 @@
     clearSelection() {
       this.selection = null;
       MUNDA.BoardRenderer.setSelection(null);
+      if (this.phase === 'playing') MUNDA.Screens.setHint('SELECT A TERMINAL');
     },
 
     completeLevel() {

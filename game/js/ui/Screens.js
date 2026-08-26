@@ -241,10 +241,11 @@
           <div class="panel-section">
             <div class="help-list">
               <div class="help-step"><div class="n">1</div><p><b>Match the terminals.</b> Connect each wire on the left to its matching connector on the right by <b>colour</b>, <b>number</b> and <b>symbol</b>.</p></div>
-              <div class="help-step"><div class="n">2</div><p><b>Drag or tap.</b> Press a terminal and drag to its pair, or tap the two matching terminals one after the other.</p></div>
+              <div class="help-step"><div class="n">2</div><p><b>Drag or tap.</b> Press a terminal and drag the live wire to its pair, or tap the two matching terminals one after the other.</p></div>
               <div class="help-step"><div class="n">3</div><p><b>Fill the strip.</b> Each correct connection energises a section of the MUNDA textile LED lighting strip.</p></div>
               <div class="help-step"><div class="n">4</div><p><b>One mistake stops the line.</b> A wrong connection fails quality control and resets the run. Stay precise.</p></div>
-              <div class="help-step"><div class="n">5</div><p><b>Complete the stage</b> to earn level, precision and perfect-assembly bonuses. Chain clean stages for streak multipliers.</p></div>
+              <div class="help-step"><div class="n">5</div><p><b>Use the keyboard.</b> Press <b>1–9</b> or the numpad to select the numbered source post, then click its match on the right.</p></div>
+              <div class="help-step"><div class="n">6</div><p><b>Complete the stage</b> to earn level, precision and perfect-assembly bonuses. Chain clean stages for streak multipliers.</p></div>
             </div>
           </div>
           <div class="panel-section">

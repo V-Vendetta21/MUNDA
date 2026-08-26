@@ -16,8 +16,8 @@
     panel: 'rgba(255,255,255,0.04)', panelSolid: '#111111',
     surface: 'rgba(255,255,255,0.07)', surfaceSolid: '#242424',
     border: 'rgba(255,255,255,0.12)', borderStrong: 'rgba(255,255,255,0.24)',
-    text: '#ffffff', text2: '#c7c7ca', text3: '#828287',
-    accent: '#ffffff', accent2: '#000000',
+    text: '#ecece8', text2: '#c3c3bf', text3: '#8c8c88',
+    accent: '#d8d8d4', accent2: '#242424',
   };
   MUNDA.THEMES = { mono: THEME };
   MUNDA.THEME_ORDER = ['mono'];
@@ -53,8 +53,8 @@
   }
 
   function currentTheme() { return THEME; }
-  function accentColor() { return '#ffffff'; }
-  function accent2Color() { return '#000000'; }
+  function accentColor() { return '#d8d8d4'; }
+  function accent2Color() { return '#242424'; }
 
   // write all CSS variables to :root
   function applyTheme() {
@@ -77,10 +77,10 @@
     set('--text', t.text);
     set('--text2', t.text2);
     set('--text3', t.text3);
-    set('--accent', '#ffffff');
-    set('--accent-2', '#000000');
-    set('--accent-soft', 'rgba(255,255,255,0.16)');
-    set('--ok', '#ffffff');
+    set('--accent', '#d8d8d4');
+    set('--accent-2', '#242424');
+    set('--accent-soft', 'rgba(216,216,212,0.16)');
+    set('--ok', '#d8d8d4');
     set('--bad', '#8a8a8e');
     set('--shadow-1', '0 1px 0 rgba(255,255,255,0.05) inset, 0 10px 40px rgba(0,0,0,0.55)');
 

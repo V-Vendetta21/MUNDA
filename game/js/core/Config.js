@@ -42,8 +42,8 @@
     custom: {
       theme: 'mono',             // single monochrome theme
       accent: null,              // unused — accent is always white
-      ledColor: '#ffffff',       // LED textile strip (monochrome)
-      ledSecond: '#e0e0e2',
+      ledColor: '#d8d8d4',       // LED textile strip (soft monochrome)
+      ledSecond: '#92928e',
       wires: null,               // per-wire color overrides {id: hex} or null = defaults
     },
     progress: {

@@ -3,10 +3,13 @@
    Design system: dark industrial precision, Linear-style surfaces
    ============================================================ */
 
+@font-face { font-family: 'Open Sans'; src: url('../assets/open-sans.woff2') format('woff2'); font-style: normal; font-weight: 300 800; font-display: swap; }
+@font-face { font-family: 'Roboto'; src: url('../assets/roboto.woff2') format('woff2'); font-style: normal; font-weight: 300 900; font-display: swap; }
+
 :root {
-  --font-ui: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-  --font-display: 'Space Grotesk', 'Inter', system-ui, sans-serif;
-  --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --font-ui: 'Open Sans', Arial, Helvetica, sans-serif;
+  --font-display: 'Roboto', Arial, Helvetica, sans-serif;
+  --font-mono: 'Roboto', Arial, Helvetica, sans-serif;
 
   /* Theme tokens — overridden at runtime by Palette.applyTheme() */
   --bg1: #050505;
@@ -17,12 +20,12 @@
   --surface-solid: #242424;
   --border: rgba(255,255,255,0.09);
   --border-strong: rgba(255,255,255,0.16);
-  --text: #f4f7fb;
-  --text2: #d0d0d0;
-  --text3: #929292;
-  --accent: #ffffff;
-  --accent-2: #000000;
-  --accent-soft: rgba(255,255,255,0.14);
+  --text: #ecece8;
+  --text2: #c3c3bf;
+  --text3: #8c8c88;
+  --accent: #d8d8d4;
+  --accent-2: #242424;
+  --accent-soft: rgba(216,216,212,0.14);
   --ok: #ffffff;
   --bad: #8a8a8a;
 
@@ -126,7 +129,7 @@ body::before {
 }
 .brand { text-align: center; margin-bottom: 40px; z-index: 2; }
 .brand-mark { display: inline-block; margin-bottom: 18px; filter: drop-shadow(0 6px 20px rgba(0,0,0,.55)); }
-.brand-mark img { display: block; width: 176px; height: 112px; object-fit: cover; border-radius: 8px; box-shadow: 0 0 0 1px rgba(255,255,255,.2); }
+.brand-mark img { display: block; width: 230px; height: 56px; object-fit: contain; filter: invert(.88) brightness(1.18); opacity: .92; }
 .brand-title {
   font-family: var(--font-display);
   font-size: clamp(52px, 9vw, 84px);
@@ -616,4 +619,51 @@ body.high-contrast .btn { box-shadow: none; }
 .modal h2 {
   background: linear-gradient(180deg, #ffffff 0%, #8a8a8a 58%, #000000 100%);
   -webkit-background-clip: text; background-clip: text;
+}
+
+/* ============ PROFESSIONAL ASSEMBLY REFINEMENT ============ */
+body {
+  background: linear-gradient(145deg, #a8a8a4 0%, #666662 18%, #242425 52%, #09090a 100%);
+}
+.screen {
+  background: linear-gradient(145deg, rgba(197,197,192,.13), rgba(75,75,72,.48) 28%, rgba(6,6,7,.84) 74%);
+}
+#app::after {
+  content:""; position:absolute; inset:0; pointer-events:none; z-index:2;
+  background: repeating-linear-gradient(112deg, transparent 0 28px, rgba(220,220,215,.018) 29px 30px);
+  mix-blend-mode: screen;
+}
+.screen, .game-root, .modal-layer, .toast { z-index: 10; }
+.btn--primary, .switch input:checked + .track, input[type="range"]::-webkit-slider-thumb, .seg button.sel {
+  background: linear-gradient(135deg, #d5d5d0 0%, #8b8b87 58%, #292929 100%);
+}
+.btn {
+  border-color: rgba(224,224,218,.14);
+  box-shadow: 0 1px 0 rgba(255,255,255,.055) inset, 0 12px 30px rgba(0,0,0,.24);
+}
+.hud {
+  background: linear-gradient(105deg, rgba(83,83,80,.97), rgba(39,39,40,.96) 42%, rgba(7,7,8,.98));
+}
+.board-frame {
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.025), 0 22px 54px rgba(0,0,0,.22);
+}
+.board-shortcuts {
+  position:absolute; top:12px; left:50%; transform:translateX(-50%); z-index:4;
+  display:flex; align-items:center; gap:9px; white-space:nowrap;
+  font:500 9px/1 var(--font-mono); letter-spacing:.18em; color:rgba(225,225,220,.48);
+  pointer-events:none;
+}
+.board-shortcuts kbd {
+  min-width:34px; padding:5px 7px; border-radius:5px;
+  color:#dddcd7; background:rgba(0,0,0,.24); border:1px solid rgba(255,255,255,.15);
+  box-shadow:0 1px 0 rgba(255,255,255,.06) inset; font:inherit; letter-spacing:.08em;
+}
+.board-hint.hot { color:#deded9; text-shadow:0 0 16px rgba(222,222,217,.42); }
+.modal, .panel, .toast {
+  background: linear-gradient(145deg, #383836 0%, #1c1c1d 48%, #09090a 100%);
+}
+
+@media (max-width:640px) {
+  .board-shortcuts { display:none; }
+  .brand-mark img { width:190px; height:46px; }
 }

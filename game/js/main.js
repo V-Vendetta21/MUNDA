@@ -75,6 +75,12 @@
     });
     // keyboard
     global.addEventListener('keydown', (e) => {
+      const number = /^Digit([1-9])$/.exec(e.code) || /^Numpad([1-9])$/.exec(e.code);
+      if (number && Game.phase === 'playing') {
+        e.preventDefault();
+        Game.selectByNumber(Number(number[1]));
+        return;
+      }
       if (e.key === 'Escape' || e.key.toLowerCase() === 'p') {
         if (Game.phase === 'paused') Game.pause(false);
         else if (Game.phase === 'playing') Game.pause(true);
