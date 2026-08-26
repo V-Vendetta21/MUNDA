@@ -22,6 +22,8 @@
     connectPulses: {},
     complete: null,
     failure: null,
+    hazards: [],
+    virusHit: null,
     raf: null,
     lastT: 0,
 
@@ -44,7 +46,7 @@
       this.ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
     },
 
-    setPuzzle: function (puzzle) {
+    setPuzzle: function (puzzle, level) {
       this.puzzle = puzzle;
       this.params = puzzle.params;
       this.selection = null;
@@ -53,6 +55,8 @@
       this.connectPulses = {};
       this.complete = null;
       this.failure = null;
+      this.virusHit = null;
+      this.hazards = this.createVirusHazards(level || 1);
     },
 
     setSelection: function (sel) { this.selection = sel; },
@@ -105,6 +109,42 @@
       return null;
     },
 
+    createVirusHazards: function (level) {
+      const layouts = [
+        { nx: 0.50, ny: 0.36 },
+        { nx: 0.40, ny: 0.66 },
+        { nx: 0.62, ny: 0.53 },
+      ];
+      const count = Math.min(3, 1 + Math.floor((Math.max(1, level) - 1) / 3));
+      return layouts.slice(0, count).map((position, index) => ({
+        id: 'virus-' + index,
+        nx: position.nx,
+        ny: position.ny,
+        r: 9 + Math.min(2, Math.floor(level / 4)),
+        phase: index * 1.9,
+      }));
+    },
+
+    virusPos: function (hazard) {
+      return { x: hazard.nx * this.cssW, y: hazard.ny * this.cssH };
+    },
+
+    hitTestVirusSegment: function (x1, y1, x2, y2) {
+      if (!this.hazards || !this.hazards.length) return null;
+      const dx = x2 - x1, dy = y2 - y1;
+      const lengthSq = dx * dx + dy * dy;
+      for (const hazard of this.hazards) {
+        const pos = this.virusPos(hazard);
+        const t = lengthSq > 0
+          ? U.clamp(((pos.x - x1) * dx + (pos.y - y1) * dy) / lengthSq, 0, 1)
+          : 0;
+        const closestX = x1 + dx * t;
+        const closestY = y1 + dy * t;
+        if (U.dist(closestX, closestY, pos.x, pos.y) <= hazard.r + 5) return hazard;
+      }
+      return null;
+    },
+
     wirePath: function (wire) {
       const p = this.puzzle.wires[wire];
       const x0 = this.railX(), y0 = U.clamp(p.leftYfrac * this.cssH, this.radius() + 6, this.cssH - this.radius() - 6);
@@ -142,6 +182,23 @@
         sparks.push({ x: pos.x, y: pos.y, vx: Math.cos(ang) * sp, vy: Math.sin(ang) * sp, life: 1, decay: U.rand(0.012, 0.03), size: U.rand(1.5, 3.5) });
       }
       this.failure = { active: true, t: 0, a, b, sparks, cb };
+    },
+
+    virusFailureSequence: function (hazard, cb) {
+      const pos = this.virusPos(hazard);
+      const particles = [];
+      for (let i = 0; i < 20; i++) {
+        const angle = i / 20 * Math.PI * 2 + U.rand(-0.12, 0.12);
+        const speed = U.rand(0.7, 2.4);
+        particles.push({
+          x: pos.x, y: pos.y,
+          vx: Math.cos(angle) * speed,
+          vy: Math.sin(angle) * speed,
+          life: 1,
+          size: U.rand(1.2, 2.8),
+        });
+      }
+      this.virusHit = { active: true, t: 0, hazard, particles, cb, done: false };
     },
 
     // ---- main loop ----
@@ -184,12 +241,80 @@
           if (cb) setTimeout(cb, 120);
         }
       }
+      if (this.virusHit && this.virusHit.active) {
+        this.virusHit.t += dt / 760;
+        for (const particle of this.virusHit.particles) {
+          particle.x += particle.vx;
+          particle.y += particle.vy;
+          particle.life -= 0.025;
+        }
+        if (this.virusHit.t >= 1 && !this.virusHit.done) {
+          this.virusHit.done = true;
+          this.virusHit.active = false;
+          const cb = this.virusHit.cb;
+          if (cb) setTimeout(cb, 100);
+        }
+      }
 
       this.drawRailBases(c);
       this.drawWires(c);
+      this.drawVirusHazards(c);
       if (this.drag && this.selection) this.drawDragLine(c);
       this.drawTerminals(c);
       if (this.failure && this.failure.active) this.drawSparks(c);
+      if (this.virusHit) this.drawVirusParticles(c);
+    },
+
+    drawVirusHazards: function (c) {
+      for (const hazard of this.hazards) {
+        const pos = this.virusPos(hazard);
+        const pulse = Math.sin(this.lastT / 430 + hazard.phase) * 0.5 + 0.5;
+        const r = hazard.r + pulse * 0.8;
+        c.save();
+        c.translate(pos.x, pos.y);
+        c.rotate(this.lastT / 9000 + hazard.phase);
+        c.globalAlpha = 0.82 + pulse * 0.16;
+        c.shadowColor = '#55e58b';
+        c.shadowBlur = 9 + pulse * 5;
+        c.strokeStyle = '#70ef9b';
+        c.lineWidth = 1.3;
+        for (let i = 0; i < 8; i++) {
+          const angle = i / 8 * Math.PI * 2;
+          const x1 = Math.cos(angle) * (r - 1);
+          const y1 = Math.sin(angle) * (r - 1);
+          const x2 = Math.cos(angle) * (r + 4);
+          const y2 = Math.sin(angle) * (r + 4);
+          c.beginPath(); c.moveTo(x1, y1); c.lineTo(x2, y2); c.stroke();
+          c.beginPath(); c.arc(x2, y2, 1.7, 0, Math.PI * 2); c.fillStyle = '#9dffb8'; c.fill();
+        }
+        const grad = c.createRadialGradient(-r * 0.25, -r * 0.3, 1, 0, 0, r);
+        grad.addColorStop(0, '#b8ffc8');
+        grad.addColorStop(0.45, '#36c96d');
+        grad.addColorStop(1, '#087239');
+        c.beginPath(); c.arc(0, 0, r, 0, Math.PI * 2); c.fillStyle = grad; c.fill();
+        c.shadowBlur = 0;
+        c.strokeStyle = '#063f24'; c.lineWidth = 1.4; c.stroke();
+        c.fillStyle = 'rgba(4,49,27,.72)';
+        c.beginPath(); c.arc(-r * .28, -r * .12, 1.7, 0, Math.PI * 2); c.fill();
+        c.beginPath(); c.arc(r * .24, r * .20, 1.4, 0, Math.PI * 2); c.fill();
+        c.beginPath(); c.arc(r * .18, -r * .30, 1.1, 0, Math.PI * 2); c.fill();
+        c.restore();
+      }
+    },
+
+    drawVirusParticles: function (c) {
+      const state = this.virusHit;
+      if (!state) return;
+      c.save();
+      for (const particle of state.particles) {
+        if (particle.life <= 0) continue;
+        c.globalAlpha = particle.life;
+        c.fillStyle = '#7dffa7';
+        c.shadowColor = '#38db75';
+        c.shadowBlur = 10;
+        c.beginPath(); c.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2); c.fill();
+      }
+      c.restore();
     },
 
     drawRailBases: function (c) {

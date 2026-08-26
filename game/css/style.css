@@ -124,9 +124,11 @@ body::before {
   position: absolute; inset: 0;
   background:
     radial-gradient(ellipse 70% 50% at 50% 18%, var(--accent-soft), transparent 70%),
-    radial-gradient(ellipse 50% 40% at 78% 80%, rgba(91,140,255,0.12), transparent 70%);
+    radial-gradient(ellipse 50% 40% at 15% 85%, rgba(255,255,255,0.03), transparent 70%);
   pointer-events: none;
+  animation: menuAtmosphere 12s ease-in-out infinite alternate;
 }
+@keyframes menuAtmosphere { to { transform:scale(1.06) translateY(1.5%); opacity:.72; } }
 .brand { text-align: center; margin-bottom: 40px; z-index: 2; }
 .brand-mark { display: inline-flex; width: 248px; height: 64px; align-items: center; justify-content: center; margin-bottom: 18px; filter: drop-shadow(0 6px 20px rgba(0,0,0,.42)); }
 .brand-mark img { display: block; width: 232px; height: auto; object-fit: contain; filter: invert(.9) brightness(1.12); opacity: .94; }
@@ -315,6 +317,13 @@ body::before {
   background-size: 36px 36px;
   pointer-events: none;
 }
+.board-frame::after {
+  content:""; position:absolute; z-index:2; width:42%; height:170%; top:-35%; left:-48%;
+  background:linear-gradient(90deg, transparent, rgba(210,210,205,.045), transparent);
+  transform:skewX(-14deg); pointer-events:none;
+  animation:boardSweep 13s linear infinite;
+}
+@keyframes boardSweep { to { left:112%; } }
 .board-corners { position: absolute; inset: 0; pointer-events: none; }
 .board-corners::before, .board-corners::after {
   content: ""; position: absolute; width: 18px; height: 18px; border: 1px solid var(--accent); opacity: 0.35;
@@ -667,4 +676,8 @@ body {
   .board-shortcuts { display:none; }
   .brand-mark { width: 210px; height: 54px; }
   .brand-mark img { width:198px; height:auto; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .menu-glow, .board-frame::after { animation:none; }
 }

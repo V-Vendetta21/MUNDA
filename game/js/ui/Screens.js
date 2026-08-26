@@ -176,9 +176,12 @@
 
     showFailure: function (d) {
       const endless = d.mode === 'endless';
-      MUNDA.Screens.setStripStatus(endless ? 'PRODUCTION STOPPED' : 'ASSEMBLY ERROR', 'bad');
-      const title = endless ? 'PRODUCTION STOPPED' : 'ASSEMBLY ERROR';
-      const msg = endless
+      const virus = d.reason === 'virus';
+      MUNDA.Screens.setStripStatus(virus ? 'BIO-CONTAMINATION' : (endless ? 'PRODUCTION STOPPED' : 'ASSEMBLY ERROR'), 'bad');
+      const title = virus ? 'BIO-CONTAMINATION' : (endless ? 'PRODUCTION STOPPED' : 'ASSEMBLY ERROR');
+      const msg = virus
+        ? 'Live wire contacted a contamination node.<br>The production line has been isolated and the run is over.'
+        : endless
         ? 'Incorrect electrical connection detected.<br>The LED textile system failed quality check.'
         : 'Incorrect electrical connection detected.<br>The LED textile system failed quality check.<br>Run reset to Level 1.';
 
@@ -203,7 +206,7 @@
         <div class="modal">
           <h2 class="bad">${title}</h2>
           <div class="modal-sub">Stage ${String(d.level).padStart(2,'0')} · quality check failed</div>
-          <div class="pass-badge bad"><span class="pass-dot"></span>DEFECTIVE ASSEMBLY</div>
+          <div class="pass-badge bad"><span class="pass-dot"></span>${virus ? 'LINE CONTAMINATED' : 'DEFECTIVE ASSEMBLY'}</div>
           <div class="modal-msg">${msg}</div>
           ${stats}
           <button class="btn btn--danger" data-f="retry">${restart}</button>
@@ -243,7 +246,7 @@
               <div class="help-step"><div class="n">1</div><p><b>Match the terminals.</b> Connect each wire on the left to its matching connector on the right by <b>colour</b>, <b>number</b> and <b>symbol</b>.</p></div>
               <div class="help-step"><div class="n">2</div><p><b>Drag or tap.</b> Press a terminal and drag the live wire to its pair, or tap the two matching terminals one after the other.</p></div>
               <div class="help-step"><div class="n">3</div><p><b>Fill the strip.</b> Each correct connection energises a section of the MUNDA textile LED lighting strip.</p></div>
-              <div class="help-step"><div class="n">4</div><p><b>One mistake stops the line.</b> A wrong connection fails quality control and resets the run. Stay precise.</p></div>
+              <div class="help-step"><div class="n">4</div><p><b>Avoid contamination.</b> Do not let the live wire touch the small green virus nodes — contact ends the run immediately.</p></div>
               <div class="help-step"><div class="n">5</div><p><b>Use the keyboard.</b> Press <b>1–9</b> or the numpad to select the numbered source post, then click its match on the right.</p></div>
               <div class="help-step"><div class="n">6</div><p><b>Complete the stage</b> to earn level, precision and perfect-assembly bonuses. Chain clean stages for streak multipliers.</p></div>
             </div>

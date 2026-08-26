@@ -48,7 +48,7 @@
       this.drag = null;
       this.startTime = performance.now();
 
-      MUNDA.BoardRenderer.setPuzzle(this.puzzle);
+      MUNDA.BoardRenderer.setPuzzle(this.puzzle, this.level);
       MUNDA.StripRenderer.reset();
       MUNDA.Screens.updateHud(this);
       MUNDA.Screens.setHint('SELECT A TERMINAL');
@@ -86,8 +86,12 @@
       }
       const dx = x - this.drag.x, dy = y - this.drag.y;
       if (Math.hypot(dx, dy) > 6) this.drag.moved = true;
+      const fromX = Number.isFinite(this.drag.lastX) ? this.drag.lastX : this.drag.x;
+      const fromY = Number.isFinite(this.drag.lastY) ? this.drag.lastY : this.drag.y;
+      const virus = MUNDA.BoardRenderer.hitTestVirusSegment(fromX, fromY, x, y);
       this.drag.lastX = x; this.drag.lastY = y;
       MUNDA.BoardRenderer.setDrag(this.drag);
+      if (virus) this.virusFailure(virus);
     },
 
     onPointerUp(x, y) {
@@ -255,6 +259,33 @@
           score: this.score,
           streak: this.streak,
           mistakes: this.mistakes,
+          best: this.mode === 'production' ? MUNDA.state.progress.bestScore : MUNDA.state.progress.endlessBest,
+        });
+      });
+    },
+
+    virusFailure(hazard) {
+      if (this.phase !== 'playing') return;
+      this.phase = 'failed';
+      this.mistakes++;
+      MUNDA.state.progress.totalMistakes++;
+      MUNDA.storage.saveProgress(MUNDA.state.progress);
+      this.drag = null;
+      this.selection = null;
+      MUNDA.BoardRenderer.setDrag(null);
+      MUNDA.BoardRenderer.setSelection(null);
+      MUNDA.Screens.setHint('BIO-CONTAMINATION DETECTED', true);
+      MUNDA.BoardRenderer.virusFailureSequence(hazard, () => {
+        if (this.phase !== 'failed') return;
+        MUNDA.StripRenderer.illuminate(false);
+        MUNDA.audio.fail();
+        MUNDA.Screens.showFailure({
+          mode: this.mode,
+          level: this.level,
+          score: this.score,
+          streak: this.streak,
+          mistakes: this.mistakes,
+          reason: 'virus',
           best: this.mode === 'production' ? MUNDA.state.progress.bestScore : MUNDA.state.progress.endlessBest,
         });
       });
