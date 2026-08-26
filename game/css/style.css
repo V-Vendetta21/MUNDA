@@ -128,8 +128,8 @@ body::before {
   pointer-events: none;
 }
 .brand { text-align: center; margin-bottom: 40px; z-index: 2; }
-.brand-mark { display: inline-block; margin-bottom: 18px; filter: drop-shadow(0 6px 20px rgba(0,0,0,.55)); }
-.brand-mark img { display: block; width: 230px; height: 56px; object-fit: contain; filter: invert(.88) brightness(1.18); opacity: .92; }
+.brand-mark { display: inline-flex; width: 248px; height: 64px; align-items: center; justify-content: center; margin-bottom: 18px; filter: drop-shadow(0 6px 20px rgba(0,0,0,.42)); }
+.brand-mark img { display: block; width: 232px; height: auto; object-fit: contain; filter: invert(.9) brightness(1.12); opacity: .94; }
 .brand-title {
   font-family: var(--font-display);
   font-size: clamp(52px, 9vw, 84px);
@@ -665,5 +665,6 @@ body {
 
 @media (max-width:640px) {
   .board-shortcuts { display:none; }
-  .brand-mark img { width:190px; height:46px; }
+  .brand-mark { width: 210px; height: 54px; }
+  .brand-mark img { width:198px; height:auto; }
 }
