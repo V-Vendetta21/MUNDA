@@ -1,0 +1,10 @@
+{
+  "version": 2,
+  "framework": null,
+  "functions": {
+    "api/loom.js": {
+      "runtime": "nodejs20.x",
+      "maxDuration": 20
+    }
+  }
+}
