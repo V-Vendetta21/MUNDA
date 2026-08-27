@@ -20,6 +20,7 @@ test('offers example general and MUNDA questions', () => {
 test('browser submits only to same-origin private endpoint and contains no Groq key', () => {
   assert.match(script, /fetch\(['"]\/api\/loom['"]/);
   assert.doesNotMatch(html + script, /gsk_[A-Za-z0-9]+/);
+  assert.match(script, /Unable to reach Loom's private server/);
 });
 
 test('MUNDA logo appears in header and return-to-main control', () => {

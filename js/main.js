@@ -273,7 +273,8 @@
       loomHistory = loomHistory.slice(-8);
     } catch (error) {
       typing.remove();
-      appendLoomMessage('assistant', error.message || 'Loom is temporarily unavailable.');
+      var networkMessage = "Unable to reach Loom's private server. Run this site with `npm start` or deploy it to a serverless host.";
+      appendLoomMessage('assistant', error && error.name === 'TypeError' ? networkMessage : (error.message || 'Loom is temporarily unavailable.'));
     } finally {
       loomForm.dataset.busy = 'false'; loomSend.disabled = false; loomInput.focus();
     }
