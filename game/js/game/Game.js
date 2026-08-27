@@ -16,7 +16,7 @@
    // halt the stale board renderer so the trace owns the canvas
    M.BoardRenderer.puzzle=null;M.BoardRenderer.selection=null;M.BoardRenderer.drag=null;
    M.TraceRenderer.begin(this.trace,(acc)=>{this.traceAccuracy=acc;this.completeTrace(acc)});
-   M.Screens.updateHud(this);M.Screens.setHint(M.t('hint.trace'));
+   M.Screens.updateHud(this);M.Screens.setHint(M.t('hint.trace.hold'));
   },
   completeTrace(acc){
    // Apply accuracy to difficulty: higher accuracy → easier board.

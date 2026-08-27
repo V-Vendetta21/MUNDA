@@ -76,6 +76,7 @@
       // --- board hints ---
       'hint.select': 'SELECT A TERMINAL',
       'hint.trace': 'TRACE THE DOTTED CIRCUIT · HOVER TO PRINT',
+      'hint.trace.hold': 'HOLD + TRACE THE DOTTED CIRCUIT · RELEASE TO PRINT',
       'hint.source': 'SOURCE SELECTED · CHOOSE ITS MATCH',
       'hint.route': 'ROUTE THE CABLE · AVOID BLOCKED ZONES',
       'hint.blocked': 'ROUTE BLOCKED · GUIDE CABLE AROUND THE HOUSING',
@@ -250,6 +251,7 @@
 
       // --- misc buttons ---
       'btn.resetView': 'RESET VIEW',
+      'btn.printCircuit': 'PRINT CIRCUIT',
     },
 
     de: {
@@ -289,6 +291,7 @@
 
       'hint.select': 'WÄHLE EINEN ANSCHLUSS',
       'hint.trace': 'ZEICHNE DEN PUNKTIERTEN KREIS · ZUM DRUCKEN SCHWEBEN',
+      'hint.trace.hold': 'GEDRÜCKT HALTEN + KREIS ZEICHNEN · LOSLASSEN ZUM DRUCKEN',
       'hint.source': 'QUELLE GEWÄHLT · WÄHLE IHRE ENTSPRECHUNG',
       'hint.route': 'KABEL VERLEGEN · GESPERRTE ZONEN MEIDEN',
       'hint.blocked': 'WEG BLOCKIERT · KABEL UM DAS GEHÄUSE FÜHREN',
@@ -448,6 +451,7 @@
 
       'shortcuts': '1–9 QUELLE WÄHLEN · ZIEHEN ZUM ZUORDNEN',
       'btn.resetView': 'ANSICHT ZURÜCKSETZEN',
+      'btn.printCircuit': 'SCHALTKREIS DRUCKEN',
     },
 
     sq: {
@@ -487,6 +491,7 @@
 
       'hint.select': 'ZGJIDH NJË TERMINAL',
       'hint.trace': 'GJURMO QARKUN ME PIKA · RRI PËR TË PRINTUAR',
+      'hint.trace.hold': 'MBAJ + GJURMO QARKUN ME PIKA · LËSHO PËR TË PRINTUAR',
       'hint.source': 'BURIMI I ZGJEDHUR · ZGJIDH ÇIFTIN E TIJ',
       'hint.route': 'RUTETO KABLLON · SHMANG ZONAT E BLLOKUARA',
       'hint.blocked': 'RRUGA E BLLOKUAR · UDHËZO KABLLON RRETH KASËS',
@@ -646,6 +651,7 @@
 
       'shortcuts': '1–9 ZGJIDH BURIMIN · TËRHIQ PËR TË PËRPUTHUR',
       'btn.resetView': 'RIVENDO PAMJEN',
+      'btn.printCircuit': 'PRINTO QARKUN',
     },
 
     fr: {
@@ -685,6 +691,7 @@
 
       'hint.select': 'SÉLECTIONNEZ UNE BORNE',
       'hint.trace': 'TRACEZ LE CIRCUIT EN POINTILLÉS · SURVOLEZ POUR IMPRIMER',
+      'hint.trace.hold': 'MAINTENIR + TRACER LE CIRCUIT · RELÂCHER POUR IMPRIMER',
       'hint.source': 'SOURCE SÉLECTIONNÉE · CHOISISSEZ SON ÉQUIVALENT',
       'hint.route': 'ACHEMINEZ LE CÂBLE · ÉVITEZ LES ZONES BLOQUÉES',
       'hint.blocked': 'VOIE BLOQUÉE · GUIDEZ LE CÂBLE AUTOUR DU BOÎTIER',
@@ -844,6 +851,7 @@
 
       'shortcuts': '1–9 SÉLECTIONNER LA SOURCE · GLISSER POUR ASSOCIER',
       'btn.resetView': 'RÉINITIALISER LA VUE',
+      'btn.printCircuit': 'IMPRIMER LE CIRCUIT',
     },
   };
 

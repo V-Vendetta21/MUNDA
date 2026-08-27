@@ -48,6 +48,8 @@ test('circuit trace accuracy clamps to the 10-100 band', () => {
   assert.equal(M.CircuitTrace.accuracy(1), 100);
   assert.equal(M.CircuitTrace.accuracy(0), 10);
   assert.equal(M.CircuitTrace.accuracy(0.5), 50);
+  assert.equal(M.CircuitTrace.accuracy(0.02), 10); // tiny trace still floors at 10
+  assert.equal(M.CircuitTrace.accuracy(0.98), 98);
 });
 
 test('circuit trace wire delta: worse accuracy adds more wires', () => {

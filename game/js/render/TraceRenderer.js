@@ -21,8 +21,8 @@
     cssW: 0, cssH: 0, dpr: 1,
     raf: null, lastT: 0,
     head: 0,            // animated head position 0..1
-    startFlash: 0,
-    held: false,
+    held: false,        // pointer is down and actively drawing
+    done: false,
 
     init: function () {
       this.canvas = document.getElementById('wires');
@@ -37,10 +37,58 @@
       this.coverage = 0;
       this.head = 0;
       this.held = false;
+      this.done = false;
       this.resize();
       if (!this.raf) { this.loop = this.loop.bind(this); this.raf = requestAnimationFrame(this.loop); }
-      MUNDA.Screens.setStripStatus(MUNDA.t('hint.trace'));
-      MUNDA.Screens.setHint(MUNDA.t('hint.trace'));
+      const btn = document.getElementById('trace-print');
+      if (btn) btn.hidden = false;
+      MUNDA.Screens.setStripStatus(MUNDA.t('hint.trace.hold'));
+      MUNDA.Screens.setHint(MUNDA.t('hint.trace.hold'));
+    },
+
+    // ---- hold-to-draw input ----
+    pointerDown: function (x, y) {
+      if (!this.active || this.done) return;
+      this.held = true;
+      this.tracePath = [{ x, y }];
+      this.coverage = 0;
+      this.head = 0;
+      MUNDA.audio.select?.();
+      MUNDA.Screens.setHint(MUNDA.t('hint.trace') + ' · 0%');
+    },
+
+    // draw while the pointer is held down
+    pointer: function (x, y) {
+      if (!this.active || this.done || !this.held) return;
+      const p = { x, y };
+      const last = this.tracePath[this.tracePath.length - 1];
+      if (!last || Math.hypot(x - last.x, y - last.y) > 3) this.tracePath.push(p);
+      // recompute coverage: fraction of target points within tol of the trail
+      const tol = Math.max(18, Math.min(30, this.cssW * 0.035));
+      let traced = 0;
+      for (const t of this.pointsPx) {
+        for (const q of this.tracePath) { if (Math.hypot(q.x - t.x, q.y - t.y) <= tol) { traced++; break; } }
+      }
+      this.coverage = this.pointsPx.length ? traced / this.pointsPx.length : 0;
+      const acc = MUNDA.CircuitTrace.accuracy(this.coverage);
+      MUNDA.Screens.setHint(MUNDA.t('hint.trace') + ' · ' + acc + '%');
+      MUNDA.audio.trace?.();
+      if (this.coverage >= 1) { this.done = true; this.held = false; this.complete(); }
+    },
+
+    // release prints what was drawn
+    pointerUp: function (x, y) {
+      if (!this.active || this.done) return;
+      this.held = false;
+      this.complete();
+    },
+
+    // Finalize the trace now with the current coverage (lets the player
+    // lock in a partial/imperfect print — down to the 10% floor).
+    printNow: function () {
+      if (!this.active || this.done) return;
+      this.held = false;
+      this.complete();
     },
 
     resize: function () {
@@ -52,25 +100,6 @@
       this.canvas.height = Math.round(rect.height * this.dpr);
       this.ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
       if (this.trace) this.pointsPx = this.trace.points.map((p) => ({ x: p.x * this.cssW, y: p.y * this.cssH }));
-    },
-
-    // pointer input while tracing
-    pointer: function (x, y) {
-      if (!this.active) return;
-      const p = { x, y };
-      const last = this.tracePath[this.tracePath.length - 1];
-      if (!last || Math.hypot(x - last.x, y - last.y) > 4) this.tracePath.push(p);
-      // recompute coverage: fraction of target points within tol of the trail
-      const tol = Math.max(18, Math.min(30, this.cssW * 0.035));
-      let traced = 0;
-      for (const t of this.pointsPx) {
-        for (const q of this.tracePath) { if (Math.hypot(q.x - t.x, q.y - t.y) <= tol) { traced++; break; } }
-      }
-      this.coverage = this.pointsPx.length ? traced / this.pointsPx.length : 0;
-      const acc = MUNDA.CircuitTrace.accuracy(this.coverage);
-      MUNDA.Screens.setHint(MUNDA.t('hint.trace') + ' · ' + acc + '%');
-      MUNDA.audio.trace?.();
-      if (this.coverage >= 1 && !this.held) { this.held = true; this.complete(); }
     },
 
     complete: function () {
@@ -86,6 +115,8 @@
     cancel: function () {
       this.active = false;
       this.trace = null;
+      const btn = document.getElementById('trace-print');
+      if (btn) btn.hidden = true;
     },
 
     // ---- animation loop ----

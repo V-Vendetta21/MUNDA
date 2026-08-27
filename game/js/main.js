@@ -38,7 +38,7 @@
       e.preventDefault();
       canvas.setPointerCapture(e.pointerId);
       const p = toLocal(e);
-      if (Game.phase === 'trace') { MUNDA.TraceRenderer.pointer(p.x, p.y); return; }
+      if (Game.phase === 'trace') { MUNDA.TraceRenderer.pointerDown(p.x, p.y); return; }
       Game.onPointerDown(p.x, p.y);
     });
 
@@ -64,11 +64,16 @@
 
     const upHandler = (e) => {
       const p = toLocal(e);
+      if (Game.phase === 'trace') { MUNDA.TraceRenderer.pointerUp(p.x, p.y); return; }
       Game.onPointerUp(p.x, p.y);
     };
     canvas.addEventListener('pointerup', upHandler);
-    canvas.addEventListener('pointercancel', () => Game.cancelDrag());
+    canvas.addEventListener('pointercancel', () => {
+      if (Game.phase === 'trace') { MUNDA.TraceRenderer.pointerUp(-9999, -9999); return; }
+      Game.cancelDrag();
+    });
     canvas.addEventListener('pointerleave', () => {
+      if (Game.phase === 'trace') { MUNDA.TraceRenderer.pointerUp(-9999, -9999); return; }
       if (!Game.drag) Game.onPointerUp(-9999, -9999);
     });
 
@@ -98,6 +103,10 @@
     document.getElementById('camera-reset').addEventListener('click', () => {
       document.querySelector('.board-frame').style.transform = '';
       MUNDA.Screens.toast(MUNDA.t('toast.recenter'), true);
+    });
+    const tracePrint = document.getElementById('trace-print');
+    if (tracePrint) tracePrint.addEventListener('click', () => {
+      if (Game.phase === 'trace') MUNDA.TraceRenderer.printNow();
     });
   }
 
