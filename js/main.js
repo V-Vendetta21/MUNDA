@@ -41,6 +41,22 @@
   var gameLoaded = false;
   var lastTrigger = null;
 
+  function preloadGame() {
+    var url = window.GAME_URL;
+    if (gameLoaded || !url || url === 'YOUR_GAME_URL_HERE') return;
+    if (!window.USE_EMBEDDED_GAME || !isSameOrigin(url)) return;
+    // create + start loading the game iframe early (hidden) so the first
+    // PLAY click opens instantly instead of compiling all assets on demand.
+    var f = document.createElement('iframe');
+    f.setAttribute('src', url);
+    f.setAttribute('title', 'MUNDA wire-assembly game');
+    f.setAttribute('allow', 'fullscreen');
+    f.setAttribute('tabindex', '-1');
+    f.setAttribute('aria-hidden', 'true');
+    overlayBody.appendChild(f);
+    gameLoaded = true;
+  }
+
   function enterGame(e) {
     if (e && e.preventDefault) e.preventDefault();
     var url = window.GAME_URL;
@@ -50,19 +66,15 @@
       return;
     }
     lastTrigger = (e && e.currentTarget) ? e.currentTarget : null;
+    // ensure the game is mounted (preloads it if not already loaded)
+    if (!gameLoaded) preloadGame();
+    var f = overlayBody.querySelector('iframe');
+    if (f) f.setAttribute('aria-hidden', 'false');
     overlay.hidden = false;
     overlay.setAttribute('aria-hidden', 'false');
     document.body.classList.add('game-open');
     // pause the website's ambient music so the embedded game's track isn't doubled
     if (window.MUNDA_MUSIC) window.MUNDA_MUSIC.pause();
-    if (!gameLoaded) {
-      var f = document.createElement('iframe');
-      f.setAttribute('src', url);
-      f.setAttribute('title', 'MUNDA wire-assembly game');
-      f.setAttribute('allow', 'fullscreen');
-      overlayBody.appendChild(f);
-      gameLoaded = true;
-    }
     if (gameExit) gameExit.focus();
   }
 
@@ -463,4 +475,21 @@
       if (explorerSel && xDesc && xInfo[explorerSel]) xDesc.innerHTML = xInfo[explorerSel]();
     });
   }
+
+  /* ---------- Preload the embedded game in the background ----------
+     Once the page is idle (or the first user gesture happens), start
+     loading the game iframe so the first PLAY click is instant. */
+  function scheduleGamePreload() {
+    if (gameLoaded) return;
+    if (document.readyState === 'complete') {
+      setTimeout(preloadGame, 250);
+    } else {
+      window.addEventListener('load', function () { setTimeout(preloadGame, 250); });
+    }
+    // Fallback: preload on first interaction even if load is delayed.
+    ['pointerdown', 'keydown', 'touchstart'].forEach(function (evt) {
+      window.addEventListener(evt, function () { setTimeout(preloadGame, 0); }, { once: true, passive: true });
+    });
+  }
+  scheduleGamePreload();
 })();

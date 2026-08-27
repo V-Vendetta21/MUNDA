@@ -28,6 +28,9 @@
     function startMusic() {
       if (musicStarted) return;
       musicStarted = true;
+      // When embedded inside the website (iframe), the site owns the music
+      // and pauses/resumes it around the game — don't double up here.
+      if (global.self !== global.top) return;
       const s = MUNDA.state.settings;
       MUNDA_MUSIC.init('../assets/', { volume: (s.ambienceVolume || 0.36) * 1.15, autostart: true });
       MUNDA_MUSIC.setMuted(!!s.muted);

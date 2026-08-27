@@ -63,10 +63,22 @@
 
     // fade to silence (respect mute) without stopping the loop engine
     pause: function () {
-      if (this.current) this.current.volume = 0;
+      this._paused = true;
+      if (this.next) { try { this.next.pause(); } catch (e) {} }
+      if (this.current) { try { this.current.pause(); } catch (e) {} }
     },
     resume: function () {
-      if (this.current && this.started) {
+      if (!this.started) return;
+      this._paused = false;
+      // if a crossfade was interrupted mid-way, drop the partial "next" and
+      // restore the current track at full volume (no half-faded state).
+      if (this.next) {
+        try { this.next.pause(); this.next.src = ''; } catch (e) {}
+        this.next = null;
+      }
+      this.transitioning = false;
+      this._nextGain = 0;
+      if (this.current) {
         this.current.volume = this.muted ? 0 : this.master;
         const p = this.current.play();
         if (p && p.catch) p.catch(() => {});
@@ -92,14 +104,18 @@
       const nextIndex = (this.index + 1) % this.tracks.length;
       this.next = this._make(this.tracks[nextIndex]);
       this.next.volume = 0;
-      const np = this.next.play();
-      if (np && np.catch) np.catch(() => {});
+      if (!this._paused) {
+        const np = this.next.play();
+        if (np && np.catch) np.catch(() => {});
+      }
 
       const out = this.current;
       const inEl = this.next;
       const start = performance.now();
       const step = (now) => {
         const p = Math.min(1, (now - start) / this.fadeMs);
+        this._nextGain = p;
+        if (this._paused) { return; } // freeze; resume() will re-play
         if (this.muted) { out.volume = 0; inEl.volume = 0; }
         else { out.volume = this.master * (1 - p); inEl.volume = this.master * p; }
         if (p < 1) { requestAnimationFrame(step); return; }
@@ -107,6 +123,7 @@
         try { out.pause(); } catch (e) {}
         this.current = inEl;
         this.next = null;
+        this._nextGain = 0;
         this.index = nextIndex;
         this.transitioning = false;
       };

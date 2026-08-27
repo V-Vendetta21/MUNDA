@@ -94,3 +94,35 @@ test('music respects the mute toggle', () => {
   M.setMuted(false);
   assert.equal(M.current.volume, 0.5);
 });
+
+test('music pause actually pauses the audio and resume restores the current track', () => {
+  const { M, audios } = loadMusic();
+  M.init('assets/', { volume: 0.5, autostart: true });
+  const first = M.current;
+  // pause should pause the playing element (not just mute it)
+  M.pause();
+  assert.equal(first.paused, true);
+  assert.equal(M._paused, true);
+  // resume should unpause and restore the current track at master volume
+  M.resume();
+  assert.equal(first.paused, false);
+  assert.equal(first.volume, 0.5);
+});
+
+test('music resume after an interrupted crossfade drops the half-faded next track', () => {
+  const { M, audios } = loadMusic();
+  M.init('assets/', { volume: 0.5, autostart: true });
+  const first = M.current;
+  // start a crossfade (creates the "next" track and sets transitioning)
+  first.currentTime = first.duration - 0.9;
+  (first._listeners.timeupdate || []).forEach((fn) => fn());
+  assert.equal(M.transitioning, true);
+  assert.equal(audios.length, 2);
+  // pause mid-crossfade, then resume
+  M.pause();
+  M.resume();
+  assert.equal(M.transitioning, false);
+  assert.equal(M.next, null);       // partial next dropped
+  assert.equal(M.current, first);   // current track preserved
+  assert.equal(first.volume, 0.5);
+});
