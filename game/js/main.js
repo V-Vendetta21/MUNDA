@@ -44,7 +44,11 @@
 
     canvas.addEventListener('pointermove', (e) => {
       const p = toLocal(e);
-      if (Game.phase === 'trace') { MUNDA.TraceRenderer.pointer(p.x, p.y); return; }
+      if (Game.phase === 'trace') {
+        // hold-to-draw: only trace while a button is pressed
+        if (e.buttons > 0) MUNDA.TraceRenderer.pointer(p.x, p.y);
+        return;
+      }
       if (e.buttons === 0) {
         // hover only
         Game.onPointerMove(p.x, p.y);
