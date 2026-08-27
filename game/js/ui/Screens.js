@@ -66,6 +66,7 @@
         MUNDA.state.settings.muted = !MUNDA.state.settings.muted;
         MUNDA.storage.saveSettings(MUNDA.state.settings);
         MUNDA.audio.setVolume();
+        if (global.MUNDA_MUSIC) global.MUNDA_MUSIC.setMuted(MUNDA.state.settings.muted);
         this.refreshMute();
         if (!MUNDA.state.settings.muted) MUNDA.audio.click();
       });

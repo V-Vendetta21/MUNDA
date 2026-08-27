@@ -8,6 +8,22 @@
 
   var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
+  /* ---------- Background music ----------
+     Crossfading playlist loop. Starts on the first user gesture
+     (autoplay policy) and loops forever via the shared module. */
+  var musicStarted = false;
+  function startMusic() {
+    if (musicStarted) return;
+    musicStarted = true;
+    if (window.MUNDA_MUSIC) {
+      window.MUNDA_MUSIC.init('assets/', { volume: 0.4, autostart: true });
+      window.MUNDA_MUSIC.resume();
+    }
+  }
+  window.addEventListener('pointerdown', startMusic, { once: true });
+  window.addEventListener('keydown', startMusic, { once: true });
+  window.addEventListener('touchstart', startMusic, { once: true });
+
   /* ---------- Configurable game launcher ----------
      GAME_URL and USE_EMBEDDED_GAME are defined in index.html.
      The game plays in a full-screen overlay; cross-origin URLs
@@ -37,6 +53,8 @@
     overlay.hidden = false;
     overlay.setAttribute('aria-hidden', 'false');
     document.body.classList.add('game-open');
+    // pause the website's ambient music so the embedded game's track isn't doubled
+    if (window.MUNDA_MUSIC) window.MUNDA_MUSIC.pause();
     if (!gameLoaded) {
       var f = document.createElement('iframe');
       f.setAttribute('src', url);
@@ -52,6 +70,8 @@
     overlay.hidden = true;
     overlay.setAttribute('aria-hidden', 'true');
     document.body.classList.remove('game-open');
+    // resume the website's ambient music now that the game overlay closed
+    if (window.MUNDA_MUSIC) window.MUNDA_MUSIC.resume();
     if (lastTrigger && lastTrigger.focus) lastTrigger.focus();
     lastTrigger = null;
   }

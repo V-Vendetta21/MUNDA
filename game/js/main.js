@@ -23,6 +23,19 @@
     // background ambient board (drawn behind everything in gameplay)
     setupAmbient();
 
+    // background music: start on the first user gesture (autoplay policy)
+    let musicStarted = false;
+    function startMusic() {
+      if (musicStarted) return;
+      musicStarted = true;
+      const s = MUNDA.state.settings;
+      MUNDA_MUSIC.init('../assets/', { volume: (s.ambienceVolume || 0.36) * 1.15, autostart: true });
+      MUNDA_MUSIC.setMuted(!!s.muted);
+      MUNDA_MUSIC.resume();
+    }
+    global.addEventListener('pointerdown', startMusic, { once: true });
+    global.addEventListener('keydown', startMusic, { once: true });
+
     // input on the wiring canvas
     const canvas = document.getElementById('wires');
     const Game = MUNDA.game;
