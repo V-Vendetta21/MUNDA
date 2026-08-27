@@ -22,6 +22,16 @@
           <div class="panel-section">
             <h3>${MUNDA.t('custom.wires')}</h3>
             <p class="panel-note">${MUNDA.t('custom.wires.note')}</p>
+
+            <div class="set-row">
+              <div class="k">${MUNDA.t('custom.wireSat')}<small>${MUNDA.t('custom.wireSat.small')}</small></div>
+              <div class="ctl"><input type="range" id="c-wire-sat" min="-60" max="60" step="1" value="${(MUNDA.state.custom.wireSat||0)}"><span class="set-val" id="c-wire-sat-v">${(MUNDA.state.custom.wireSat||0)>0?'+':''}${MUNDA.state.custom.wireSat||0}</span></div>
+            </div>
+            <div class="set-row">
+              <div class="k">${MUNDA.t('custom.wireLight')}<small>${MUNDA.t('custom.wireLight.small')}</small></div>
+              <div class="ctl"><input type="range" id="c-wire-light" min="-50" max="50" step="1" value="${(MUNDA.state.custom.wireLight||0)}"><span class="set-val" id="c-wire-light-v">${(MUNDA.state.custom.wireLight||0)>0?'+':''}${MUNDA.state.custom.wireLight||0}</span></div>
+            </div>
+
             <div class="color-list" id="c-wires"></div>
             <button class="btn btn--sm btn--ghost" id="c-wires-reset" style="margin-top:10px">${MUNDA.t('custom.resetWires')}</button>
           </div>
@@ -136,12 +146,19 @@
       const defs = MUNDA.resolveWires();
       defs.forEach((w) => {
         const base = custom[w.id] || w.base;
+        const hsl = U.hexToHsl(base);
         const row = document.createElement('div');
         row.className = 'color-row';
         row.innerHTML = `
           <div class="color-swatch" data-wire="${w.id}" style="background:${base}"></div>
           <span class="c-name">${w.name}</span>
-          <input type="color" data-wire="${w.id}" value="${base}">`;
+          <input type="color" data-wire="${w.id}" value="${base}">
+          <button type="button" class="color-edit" data-wire="${w.id}" aria-expanded="false" aria-label="Edit ${w.name}">H/S/L</button>
+          <div class="color-hsl" data-wire="${w.id}" hidden>
+            <label>H <input type="range" data-wire="${w.id}" data-hsl="h" min="0" max="360" step="1" value="${Math.round(hsl.h)}"><b data-wire="${w.id}" data-hslv="h">${Math.round(hsl.h)}</b></label>
+            <label>S <input type="range" data-wire="${w.id}" data-hsl="s" min="0" max="100" step="1" value="${Math.round(hsl.s)}"><b data-wire="${w.id}" data-hslv="s">${Math.round(hsl.s)}</b></label>
+            <label>L <input type="range" data-wire="${w.id}" data-hsl="l" min="0" max="100" step="1" value="${Math.round(hsl.l)}"><b data-wire="${w.id}" data-hslv="l">${Math.round(hsl.l)}</b></label>
+          </div>`;
         list.appendChild(row);
       });
     },
@@ -154,22 +171,112 @@
         if (closeBtn) this.close();
       });
 
-      // wire color swatches
+      const custom = MUNDA.state.custom;
+      // Live-update a wire's swatch without saving (fast, no localStorage/audio).
+      const paint = (id, hex) => {
+        const sw = layer.querySelector(`.color-swatch[data-wire="${id}"]`);
+        if (sw) sw.style.background = hex;
+        const picker = layer.querySelector(`input[type="color"][data-wire="${id}"]`);
+        if (picker) picker.value = hex;
+      };
+      // Commit a wire color: store, save once, play sound, invalidate render cache.
+      let commitTimer = null;
+      const commit = (id, hex, play) => {
+        if (!custom.wires) custom.wires = {};
+        custom.wires[id] = hex;
+        MUNDA.invalidateWireCache();
+        clearTimeout(commitTimer);
+        commitTimer = setTimeout(() => MUNDA.storage.saveCustom(custom), 160);
+        if (play) MUNDA.audio.select();
+      };
+      // Recompute HSL for a wire and refresh its sliders (after HSL edits).
+      const syncHsl = (id) => {
+        const hex = (custom.wires && custom.wires[id]) || MUNDA.resolveWires().find((w) => w.id === id).base;
+        const hsl = U.hexToHsl(hex);
+        layer.querySelectorAll(`[data-wire="${id}"][data-hsl]`).forEach((inp) => {
+          inp.value = Math.round(hsl[inp.getAttribute('data-hsl')]);
+        });
+        layer.querySelectorAll(`[data-wire="${id}"][data-hslv]`).forEach((b) => {
+          b.textContent = Math.round(hsl[b.getAttribute('data-hslv')]);
+        });
+      };
+
+      // wire color swatches + hex pickers
       U.$all('.color-swatch[data-wire]', layer).forEach((sw) => {
-        const input = layer.querySelector(`input[data-wire="${sw.getAttribute('data-wire')}"]`);
+        const id = sw.getAttribute('data-wire');
+        const input = layer.querySelector(`input[type="color"][data-wire="${id}"]`);
         sw.addEventListener('click', () => input.click());
+        // live preview while dragging — NO save, NO audio, NO cache churn
         input.addEventListener('input', () => {
           sw.style.background = input.value;
-          const id = input.getAttribute('data-wire');
-          if (!MUNDA.state.custom.wires) MUNDA.state.custom.wires = {};
-          MUNDA.state.custom.wires[id] = input.value;
-          MUNDA.storage.saveCustom(MUNDA.state.custom);
-          MUNDA.audio.select();
+          if (!custom.wires) custom.wires = {};
+          custom.wires[id] = input.value;
+        });
+        // commit once on release
+        input.addEventListener('change', () => { commit(id, input.value, true); syncHsl(id); });
+      });
+
+      // H/S/L edit toggle
+      layer.querySelectorAll('.color-edit[data-wire]').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          const id = btn.getAttribute('data-wire');
+          const panel = layer.querySelector(`.color-hsl[data-wire="${id}"]`);
+          const open = panel.hidden;
+          panel.hidden = !open;
+          btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+          if (open) syncHsl(id);
         });
       });
+
+      // HSL sliders — live-update swatch/hex, commit on release
+      layer.querySelectorAll('input[data-hsl]').forEach((inp) => {
+        const id = inp.getAttribute('data-wire');
+        const chan = inp.getAttribute('data-hsl');
+        inp.addEventListener('input', () => {
+          // collect current H/S/L from the row
+          let h = 0, s = 0, l = 0;
+          layer.querySelectorAll(`[data-wire="${id}"][data-hsl]`).forEach((x) => {
+            const ch = x.getAttribute('data-hsl');
+            if (ch === 'h') h = +x.value; else if (ch === 's') s = +x.value; else l = +x.value;
+          });
+          const hex = U.hslToHex(h, s, l);
+          paint(id, hex);
+          if (!custom.wires) custom.wires = {};
+          custom.wires[id] = hex;
+          layer.querySelector(`[data-wire="${id}"][data-hslv="${chan}"]`).textContent = inp.value;
+        });
+        inp.addEventListener('change', () => {
+          commit(inp.getAttribute('data-wire'), (custom.wires || {})[inp.getAttribute('data-wire')], true);
+        });
+      });
+
+      // global wire tuning sliders
+      const bindGlobal = (id, key, spanId) => {
+        const inp = layer.querySelector('#' + id);
+        if (!inp) return;
+        const span = layer.querySelector('#' + spanId);
+        const refresh = () => { span.textContent = (inp.value > 0 ? '+' : '') + inp.value; };
+        inp.addEventListener('input', () => {
+          custom[key] = +inp.value;
+          refresh();
+          MUNDA.invalidateWireCache();
+          // repaint swatches so the user sees the global effect live
+          const defs = MUNDA.resolveWires();
+          defs.forEach((w) => {
+            const sw = layer.querySelector(`.color-swatch[data-wire="${w.id}"]`);
+            if (sw) sw.style.background = (custom.wires && custom.wires[w.id]) || w.base;
+          });
+        });
+        inp.addEventListener('change', () => { MUNDA.storage.saveCustom(custom); MUNDA.audio.select(); });
+      };
+      bindGlobal('c-wire-sat', 'wireSat', 'c-wire-sat-v');
+      bindGlobal('c-wire-light', 'wireLight', 'c-wire-light-v');
+
       layer.querySelector('#c-wires-reset').addEventListener('click', () => {
-        MUNDA.state.custom.wires = null;
-        MUNDA.storage.saveCustom(MUNDA.state.custom);
+        custom.wires = null;
+        custom.wireSat = 0; custom.wireLight = 0;
+        MUNDA.storage.saveCustom(custom);
+        MUNDA.invalidateWireCache();
         this.buildWires();
         MUNDA.audio.click();
       });

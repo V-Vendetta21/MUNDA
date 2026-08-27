@@ -54,6 +54,8 @@
       ledColor: '#d8d8d4',       // LED textile strip (soft monochrome)
       ledSecond: '#92928e',
       wires: null,               // per-wire color overrides {id: hex} or null = defaults
+      wireSat: 0,                // global wire saturation delta (-60..60)
+      wireLight: 0,              // global wire lightness delta (-50..50)
     },
     progress: {
       highestLevel: 1,      // production shift highest level reached

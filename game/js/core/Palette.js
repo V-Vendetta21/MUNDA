@@ -40,6 +40,8 @@
     const custom = MUNDA.state.custom;
     const cb = MUNDA.state.settings.colorblind;
     const catalog = MUNDA.WIRE_CATALOG;
+    const satDelta = custom.wireSat || 0;
+    const lightDelta = custom.wireLight || 0;
     return catalog.map((w) => {
       let base = w.base, dark = w.dark, glow = w.glow;
       if (cb && CB_SET[w.id]) { base = CB_SET[w.id].base; dark = CB_SET[w.id].dark; glow = CB_SET[w.id].glow; }
@@ -48,9 +50,26 @@
         dark = U.mix(base, '#000000', 0.68);
         glow = U.mix(base, '#ffffff', 0.30);
       }
+      // global wire tuning (saturation / lightness) applied on top of any override
+      if (satDelta || lightDelta) {
+        base = U.adjustHsl(base, satDelta, lightDelta);
+        dark = U.adjustHsl(dark, satDelta, lightDelta * 0.7);
+        glow = U.adjustHsl(glow, satDelta * 0.6, lightDelta * 0.4);
+      }
       return { id: w.id, name: w.name, base, dark, glow, sym: w.sym, pattern: w.pattern || 'solid', stiffness: w.stiffness || 0.88 };
     });
   }
+
+  // memoized resolve — only recomputes when custom settings or colorblind change
+  let _wiresCache = null, _wiresSig = '';
+  function cachedResolveWires() {
+    const sig = (MUNDA.state.custom.wireSat || 0) + '|' + (MUNDA.state.custom.wireLight || 0) + '|' +
+      (MUNDA.state.settings.colorblind ? '1' : '0') + '|' +
+      (MUNDA.state.custom.wires ? JSON.stringify(MUNDA.state.custom.wires) : '');
+    if (_wiresCache && _wiresSig === sig) return _wiresCache;
+    _wiresSig = sig; _wiresCache = resolveWires(); return _wiresCache;
+  }
+  function invalidateWireCache() { _wiresCache = null; _wiresSig = ''; }
 
   function currentTheme() { return THEME; }
   function accentColor() { return '#d8d8d4'; }
@@ -90,7 +109,8 @@
 
   function clampVal(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
 
-  MUNDA.resolveWires = resolveWires;
+  MUNDA.resolveWires = cachedResolveWires;
+  MUNDA.invalidateWireCache = invalidateWireCache;
   MUNDA.currentTheme = currentTheme;
   MUNDA.accentColor = accentColor;
   MUNDA.accent2Color = accent2Color;
