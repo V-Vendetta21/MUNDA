@@ -19,3 +19,7 @@ Thumbs.db
 tmp_*.png
 tmp_*.js
 munda_cdp_test.js
+
+# Local Loom server runtime logs
+server.out.log
+server.err.log
