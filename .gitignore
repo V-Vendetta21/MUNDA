@@ -10,6 +10,11 @@ Thumbs.db
 .vscode/
 .idea/
 
+# Private server configuration
+.env
+.env.local
+.env.*.local
+
 # Local test screenshots / harness leftovers
 tmp_*.png
 tmp_*.js

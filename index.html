@@ -38,6 +38,9 @@
       <a href="#game" class="nav-link" data-nav="game">Interactive Game</a>
     </nav>
     <div class="nav-actions">
+      <button class="loom-toggle" id="loom-toggle" type="button" aria-expanded="false" aria-controls="loom-panel">
+        <span class="loom-toggle-mark" aria-hidden="true"><i></i><i></i><i></i></span><span>ASK LOOM</span>
+      </button>
       <a href="#game" class="btn btn--nav" id="nav-play">PLAY THE GAME <span class="arr">→</span></a>
       <button class="nav-burger" id="nav-burger" aria-label="Menu" aria-expanded="false" aria-controls="nav-links">
         <span></span><span></span><span></span>
@@ -45,6 +48,29 @@
     </div>
   </div>
 </header>
+
+<!-- ================= LOOM AI ================= -->
+<aside class="loom-panel" id="loom-panel" hidden aria-label="Loom AI assistant">
+  <div class="loom-panel-head">
+    <div class="loom-identity"><span class="loom-orb" aria-hidden="true"><i></i></span><div><b>LOOM</b><span>PRIVATE AI GUIDE</span></div></div>
+    <button class="loom-close" id="loom-close" type="button" aria-label="Close Loom">×</button>
+  </div>
+  <div class="loom-messages" id="loom-messages" aria-live="polite">
+    <div class="loom-message loom-message--assistant"><b>LOOM</b><p>Ask me a general question or explore MUNDA textile-lighting technology.</p></div>
+  </div>
+  <div class="loom-presets" aria-label="Example questions">
+    <button type="button" data-loom-question="What is textile lighting?">What is textile lighting?</button>
+    <button type="button" data-loom-question="How does MUNDA support automotive interiors?">How does MUNDA support automotive interiors?</button>
+    <button type="button" data-loom-question="What makes flexible LED textiles useful?">What makes flexible LED textiles useful?</button>
+    <button type="button" data-loom-question="Explain LEDs in simple terms.">Explain LEDs in simple terms.</button>
+  </div>
+  <form class="loom-form" id="loom-form">
+    <label class="sr-only" for="loom-input">Ask Loom</label>
+    <textarea id="loom-input" rows="1" maxlength="1200" placeholder="Ask Loom" required></textarea>
+    <button type="submit" id="loom-send" aria-label="Send question"><span>ASK</span><i aria-hidden="true">→</i></button>
+  </form>
+  <p class="loom-privacy">Your Groq credential remains on the private server and is never sent to the browser.</p>
+</aside>
 
 <main id="main">
 <!-- ================= HERO ================= -->
@@ -459,8 +485,8 @@
 <!-- ================= GAME OVERLAY (full-screen) ================= -->
 <div class="game-overlay" id="game-overlay" hidden aria-hidden="true">
   <div class="game-overlay-bar">
-    <span class="game-overlay-brand"><img src="assets/logo.png" alt="MUNDA Kosova" width="257" height="234"><i>·</i> PRECISION ASSEMBLY</span>
-    <button class="game-exit" id="game-exit" type="button" aria-label="Exit the game and return to the website">✕ EXIT GAME</button>
+    <span class="game-overlay-brand"><span class="game-overlay-logo brand-mask" role="img" aria-label="MUNDA"></span><i>·</i> PRECISION ASSEMBLY</span>
+    <button class="game-exit" id="game-exit" type="button" aria-label="Exit the game and return to the website"><span class="game-exit-mark" aria-hidden="true">←</span> RETURN TO MAIN</button>
   </div>
   <div class="game-overlay-body" id="game-overlay-body"></div>
 </div>

@@ -223,6 +223,74 @@
     b.addEventListener('click', function () { selectExplorer(b.getAttribute('data-xn')); });
   });
 
+  /* ---------- Loom private AI guide ---------- */
+  var loomToggle = document.getElementById('loom-toggle');
+  var loomPanel = document.getElementById('loom-panel');
+  var loomClose = document.getElementById('loom-close');
+  var loomForm = document.getElementById('loom-form');
+  var loomInput = document.getElementById('loom-input');
+  var loomSend = document.getElementById('loom-send');
+  var loomMessages = document.getElementById('loom-messages');
+  var loomHistory = [];
+
+  function setLoomOpen(open) {
+    if (!loomPanel || !loomToggle) return;
+    loomPanel.hidden = !open;
+    loomToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+    if (open && loomInput) setTimeout(function () { loomInput.focus(); }, 40);
+  }
+  function appendLoomMessage(role, text, typing) {
+    var item = document.createElement('div');
+    item.className = 'loom-message loom-message--' + role + (typing ? ' loom-message--typing' : '');
+    var label = document.createElement('b');
+    label.textContent = role === 'user' ? 'YOU' : 'LOOM';
+    var copy = document.createElement('p');
+    copy.textContent = text;
+    item.appendChild(label); item.appendChild(copy);
+    loomMessages.appendChild(item);
+    loomMessages.scrollTop = loomMessages.scrollHeight;
+    return item;
+  }
+  async function askLoom(question) {
+    var message = String(question || '').trim();
+    if (!message || !loomForm || loomForm.dataset.busy === 'true') return;
+    loomForm.dataset.busy = 'true'; loomSend.disabled = true;
+    appendLoomMessage('user', message);
+    loomInput.value = '';
+    var typing = appendLoomMessage('assistant', 'Thinking', true);
+    try {
+      var response = await fetch('/api/loom', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'same-origin',
+        body: JSON.stringify({ message: message, history: loomHistory.slice(-8) })
+      });
+      var data = await response.json().catch(function () { return {}; });
+      if (!response.ok) throw new Error(data.error || 'Loom is unavailable.');
+      typing.remove();
+      appendLoomMessage('assistant', data.reply);
+      loomHistory.push({ role: 'user', content: message }, { role: 'assistant', content: data.reply });
+      loomHistory = loomHistory.slice(-8);
+    } catch (error) {
+      typing.remove();
+      appendLoomMessage('assistant', error.message || 'Loom is temporarily unavailable.');
+    } finally {
+      loomForm.dataset.busy = 'false'; loomSend.disabled = false; loomInput.focus();
+    }
+  }
+  if (loomToggle) loomToggle.addEventListener('click', function () { setLoomOpen(loomPanel.hidden); });
+  if (loomClose) loomClose.addEventListener('click', function () { setLoomOpen(false); loomToggle.focus(); });
+  if (loomForm) loomForm.addEventListener('submit', function (e) { e.preventDefault(); askLoom(loomInput.value); });
+  if (loomInput) loomInput.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); askLoom(loomInput.value); }
+  });
+  document.querySelectorAll('[data-loom-question]').forEach(function (button) {
+    button.addEventListener('click', function () { askLoom(button.getAttribute('data-loom-question')); });
+  });
+  document.addEventListener('click', function (e) {
+    if (loomPanel && !loomPanel.hidden && !loomPanel.contains(e.target) && !loomToggle.contains(e.target)) setLoomOpen(false);
+  });
+
   /* ---------- Hero cursor parallax ---------- */
   var hero = document.querySelector('.hero');
   var heroWave = document.querySelector('.hero-wave--persp');
