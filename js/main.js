@@ -199,17 +199,19 @@
   /* ---------- Technology explorer ---------- */
   var xDesc = document.getElementById('x-desc');
   var xInfo = {
-    textile: '<b>TEXTILE</b> — Technical fabrics form the flexible substrate that carries light across the interior.',
-    led: '<b>LED</b> — Miniature LEDs are embedded directly into the textile structure to emit light.',
-    flexible: '<b>FLEXIBLE STRUCTURE</b> — Unlike conventional rigid lighting components, textile lighting can be integrated into flexible interior structures.',
-    electronics: '<b>ELECTRONICS</b> — Electronic integration connects power and control to the lighting elements.'
+    textile: function () { return window.MUNDA_SITE_I18N.t('x.d.textile'); },
+    led: function () { return window.MUNDA_SITE_I18N.t('x.d.led'); },
+    flexible: function () { return window.MUNDA_SITE_I18N.t('x.d.flexible'); },
+    electronics: function () { return window.MUNDA_SITE_I18N.t('x.d.electronics'); }
   };
+  var explorerSel = 'textile';
   function selectExplorer(name) {
+    explorerSel = name;
     var nodes = document.querySelectorAll('.xnode');
     var btns = document.querySelectorAll('.x-btn');
     nodes.forEach(function (n) { n.classList.toggle('sel', n.getAttribute('data-xn') === name); });
     btns.forEach(function (b) { b.classList.toggle('sel', b.getAttribute('data-xn') === name); });
-    if (xDesc && xInfo[name]) xDesc.innerHTML = xInfo[name];
+    if (xDesc && xInfo[name]) xDesc.innerHTML = xInfo[name]();
   }
   var xnNodes = document.querySelectorAll('.xnode');
   xnNodes.forEach(function (n) {
@@ -243,7 +245,7 @@
     var item = document.createElement('div');
     item.className = 'loom-message loom-message--' + role + (typing ? ' loom-message--typing' : '');
     var label = document.createElement('b');
-    label.textContent = role === 'user' ? 'YOU' : 'LOOM';
+    label.textContent = role === 'user' ? window.MUNDA_SITE_I18N.t('loom.you') : 'LOOM';
     var copy = document.createElement('p');
     copy.textContent = text;
     item.appendChild(label); item.appendChild(copy);
@@ -257,7 +259,7 @@
     loomForm.dataset.busy = 'true'; loomSend.disabled = true;
     appendLoomMessage('user', message);
     loomInput.value = '';
-    var typing = appendLoomMessage('assistant', 'Thinking', true);
+    var typing = appendLoomMessage('assistant', window.MUNDA_SITE_I18N.t('loom.thinking'), true);
     try {
       var response = await fetch('/api/loom', {
         method: 'POST',
@@ -266,15 +268,15 @@
         body: JSON.stringify({ message: message, history: loomHistory.slice(-8) })
       });
       var data = await response.json().catch(function () { return {}; });
-      if (!response.ok) throw new Error(data.error || 'Loom is unavailable.');
+      if (!response.ok) throw new Error(data.error || window.MUNDA_SITE_I18N.t('loom.temp'));
       typing.remove();
       appendLoomMessage('assistant', data.reply);
       loomHistory.push({ role: 'user', content: message }, { role: 'assistant', content: data.reply });
       loomHistory = loomHistory.slice(-8);
     } catch (error) {
       typing.remove();
-      var networkMessage = "Unable to reach Loom's private server. Run this site with `npm start` or deploy it to a serverless host.";
-      appendLoomMessage('assistant', error && error.name === 'TypeError' ? networkMessage : (error.message || 'Loom is temporarily unavailable.'));
+      var networkMessage = window.MUNDA_SITE_I18N.t('loom.unavailable');
+      appendLoomMessage('assistant', error && error.name === 'TypeError' ? networkMessage : (error.message || window.MUNDA_SITE_I18N.t('loom.temp')));
     } finally {
       loomForm.dataset.busy = 'false'; loomSend.disabled = false; loomInput.focus();
     }
@@ -318,6 +320,87 @@
         var el = document.querySelector(id);
         if (el) { e.preventDefault(); el.scrollIntoView(); }
       });
+    });
+  }
+
+  /* ---------- Language selector ---------- */
+  var i18n = window.MUNDA_SITE_I18N;
+  if (i18n) {
+    var langBtn = document.getElementById('lang-select-btn');
+    var langMenu = document.getElementById('lang-select-menu');
+    var langFlag = document.getElementById('lang-select-flag');
+    var langCode = document.getElementById('lang-select-code');
+    var langPrimary = document.getElementById('lang-select-primary');
+    var langOther = document.getElementById('lang-select-other');
+    var langDivider = document.getElementById('lang-select-divider');
+
+    function renderFlag() {
+      var info = i18n.registry()[i18n.current()] || i18n.LOCALES[0];
+      if (langFlag) langFlag.textContent = info.flag;
+      if (langCode) langCode.textContent = info.tab;
+    }
+    function buildMenu() {
+      if (!langPrimary || !langOther) return;
+      langPrimary.innerHTML = '';
+      langOther.innerHTML = '';
+      i18n.LOCALES.forEach(function (l) {
+        var b = document.createElement('button');
+        b.type = 'button'; b.className = 'lang-select-item' + (i18n.current() === l.code ? ' sel' : '');
+        b.setAttribute('data-lang', l.code); b.setAttribute('role', 'option');
+        b.innerHTML = '<span class="lang-select-item-flag">' + l.flag + '</span><span>' + l.name + '</span>';
+        b.addEventListener('click', function () { setLang(l.code); });
+        langPrimary.appendChild(b);
+      });
+      i18n.OTHER_LOCALES.forEach(function (l) {
+        var b = document.createElement('button');
+        b.type = 'button'; b.className = 'lang-select-item' + (i18n.current() === l.code ? ' sel' : '');
+        b.setAttribute('data-lang', l.code); b.setAttribute('role', 'option');
+        b.innerHTML = '<span class="lang-select-item-flag">' + l.flag + '</span><span>' + l.name + '</span>';
+        b.addEventListener('click', function () { setLang(l.code); });
+        langOther.appendChild(b);
+      });
+      if (langDivider) langDivider.hidden = langOther.childNodes.length === 0;
+    }
+    function setLang(code) {
+      i18n.setLanguage(code);
+      closeMenu();
+      renderFlag();
+      buildMenu();
+      if (explorerSel && xDesc && xInfo[explorerSel]) xDesc.innerHTML = xInfo[explorerSel]();
+      // re-trigger reveal so newly-translated elements animate in
+      if ('IntersectionObserver' in window) {
+        var els = document.querySelectorAll('.reveal:not(.in)');
+        els.forEach(function (el) { el.classList.add('in'); });
+      }
+    }
+    function toggleMenu() {
+      var open = langMenu.getAttribute('hidden') === null ? false : true;
+      if (open) openMenu(); else closeMenu();
+    }
+    function openMenu() {
+      langMenu.removeAttribute('hidden');
+      langBtn.setAttribute('aria-expanded', 'true');
+    }
+    function closeMenu() {
+      langMenu.setAttribute('hidden', '');
+      langBtn.setAttribute('aria-expanded', 'false');
+    }
+    if (langBtn) langBtn.addEventListener('click', function (e) { e.stopPropagation(); toggleMenu(); });
+    document.addEventListener('click', function (e) {
+      var sel = document.getElementById('lang-select');
+      if (sel && !sel.contains(e.target)) closeMenu();
+    });
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') closeMenu();
+    });
+    // Re-render translations and explorer when the language changes (also fires from setLanguage)
+    renderFlag();
+    buildMenu();
+    i18n.applyToDOM();
+    document.addEventListener('languagechange', function () {
+      renderFlag();
+      buildMenu();
+      if (explorerSel && xDesc && xInfo[explorerSel]) xDesc.innerHTML = xInfo[explorerSel]();
     });
   }
 })();

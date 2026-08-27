@@ -5,6 +5,7 @@ const path = require('node:path');
 const root = path.join(__dirname, '..');
 const html = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
 const script = fs.readFileSync(path.join(root, 'js', 'main.js'), 'utf8');
+const siteI18n = fs.readFileSync(path.join(root, 'js', 'site-i18n.js'), 'utf8');
 
 test('top header exposes an accessible Ask Loom panel', () => {
   assert.match(html, /id="loom-toggle"[^>]*aria-controls="loom-panel"/);
@@ -20,7 +21,19 @@ test('offers example general and MUNDA questions', () => {
 test('browser submits only to same-origin private endpoint and contains no Groq key', () => {
   assert.match(script, /fetch\(['"]\/api\/loom['"]/);
   assert.doesNotMatch(html + script, /gsk_[A-Za-z0-9]+/);
-  assert.match(script, /Unable to reach Loom's private server/);
+  // network fallback lives in the i18n dictionary and is resolved at runtime
+  assert.match(script, /loom\.unavailable/);
+  assert.match(siteI18n, /Unable to reach Loom(?:&#39;|'|\\u2019)s private server/);
+});
+
+test('website ships a language selector with primary + other flag locales', () => {
+  assert.match(html, /id="lang-select-btn"/);
+  assert.match(html, /id="lang-select-menu"/);
+  assert.match(siteI18n, /LOCALES\s*=\s*\[/);
+  assert.match(siteI18n, /OTHER_LOCALES\s*=\s*\[/);
+  assert.match(siteI18n, /code: 'de'/);
+  assert.match(siteI18n, /code: 'sq'/);
+  assert.match(siteI18n, /code: 'fr'/);
 });
 
 test('MUNDA logo appears in header and return-to-main control', () => {
