@@ -679,7 +679,7 @@ body {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .menu-glow, .board-frame::after { animation:none; }
+  .menu-glow, .board-frame::after, .menu-scan, .brand-ring span { animation:none; }
 }
 
 /* Precision Routing 2.0 — premium monochrome systems */
@@ -788,3 +788,57 @@ body:not(.panic-mode) .hud-timer.urgent { animation-duration:1.1s; }
 @media (max-width:420px) {
   .lang-grid { grid-template-columns: 1fr; }
 }
+
+/* ============ TEXT SPACING & READABILITY ============ */
+/* Give body/paragraph copy more air and a slightly wider letter-spacing. */
+.modal-sub, .panel p, .help-step p, .training-grid p,
+.stat-row p, .qc-cell .qc-v, .fail-list p, .about-copy p {
+  letter-spacing: 0.03em;
+  line-height: 1.75;
+}
+.modal-sub, .panel .panel-sub { line-height: 1.7; letter-spacing: 0.05em; }
+/* Breathing room inside cards / buttons so labels don't feel cramped. */
+.menu-nav .btn > span:last-child { gap: 6px; }
+.menu-nav .btn small { letter-spacing: 0.06em; line-height: 1.4; }
+/* HUD + strip status a touch more air */
+.hud-mode-name, .hud-routing span, .hud-timer span { letter-spacing: 0.22em; }
+.board-hint { letter-spacing: 0.34em; }
+.toast { letter-spacing: 0.2em; padding: 12px 22px; gap: 12px; }
+.toast .dot { width: 9px; height: 9px; }
+
+/* ============ MAIN MENU DESIGN FEATURES ============ */
+/* Screen always full-bleed so decorative layers sit behind content. */
+.screen--menu { position: relative; overflow: hidden; }
+
+/* Animated targeting corner brackets framing the menu. */
+.menu-corners { position: absolute; inset: 14px; z-index: 1; pointer-events: none; }
+.menu-corners i { position: absolute; width: 26px; height: 26px; border: 1.5px solid rgba(255,255,255,.34); opacity: .55; }
+.menu-corners i:nth-child(1){ top:0; left:0; border-right:none; border-bottom:none; border-radius:6px 0 0 0; }
+.menu-corners i:nth-child(2){ top:0; right:0; border-left:none; border-bottom:none; border-radius:0 6px 0 0; }
+.menu-corners i:nth-child(3){ bottom:0; left:0; border-right:none; border-top:none; border-radius:0 0 0 6px; }
+.menu-corners i:nth-child(4){ bottom:0; right:0; border-left:none; border-top:none; border-radius:0 0 6px 0; }
+.menu-corners i::after { content:""; position:absolute; width:6px; height:6px; background:var(--accent); opacity:.8; }
+.menu-corners i:nth-child(1)::after{ top:3px; left:3px; box-shadow:0 0 8px var(--accent); }
+.menu-corners i:nth-child(2)::after{ top:3px; right:3px; box-shadow:0 0 8px var(--accent); }
+.menu-corners i:nth-child(3)::after{ bottom:3px; left:3px; box-shadow:0 0 8px var(--accent); }
+.menu-corners i:nth-child(4)::after{ bottom:3px; right:3px; box-shadow:0 0 8px var(--accent); }
+
+/* Slow scanline sweeping across the whole menu. */
+.menu-scan { position:absolute; z-index:1; width:34%; height:160%; top:-30%; left:-40%;
+  background:linear-gradient(100deg, transparent, rgba(255,255,255,.045), transparent);
+  transform:skewX(-12deg); pointer-events:none; animation:menuScan 9s linear infinite; }
+@keyframes menuScan { to { left:115%; } }
+
+/* Pulsing concentric rings radiating behind the logo. */
+.brand { position: relative; }
+.brand-ring { position:absolute; top:50%; left:50%; width:420px; height:420px; transform:translate(-50%,-58%); pointer-events:none; z-index:0; }
+.brand-ring span { position:absolute; inset:0; border:1px solid rgba(255,255,255,.10); border-radius:50%; }
+.brand-ring span:nth-child(1){ animation:ringPulse 4s ease-out infinite; }
+.brand-ring span:nth-child(2){ inset:14%; border-color:rgba(255,255,255,.12); animation:ringPulse 4s ease-out .9s infinite; }
+.brand-ring span:nth-child(3){ inset:28%; border-color:rgba(255,255,255,.15); animation:ringPulse 4s ease-out 1.8s infinite; }
+@keyframes ringPulse { 0%{ transform:scale(.7); opacity:0 } 30%{ opacity:.5 } 100%{ transform:scale(1.08); opacity:0 } }
+
+/* Button icon glow + micro slide on hover for menu cards. */
+.menu-nav .btn { transition: transform .16s ease, background .2s ease, border-color .2s ease, box-shadow .2s ease; }
+.menu-nav .btn:hover .btn-ico { box-shadow:0 0 16px var(--accent-soft); border-color:var(--accent); transform:scale(1.08); }
+.menu-nav .btn-ico { transition: transform .16s ease, box-shadow .2s ease, border-color .2s ease; }

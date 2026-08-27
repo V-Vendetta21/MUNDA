@@ -122,8 +122,9 @@
     panic() { this._schedule((t)=>{this._tone(110,t,.5,'sine',.1,'ambience');this._noise(t,.2,.04,800,'ambience')}); },
     streak() { this._schedule((t) => this._tone(880, t, 0.08, 'sine', 0.14)); },
     back() { this._schedule((t) => this._tone(600, t, 0.08, 'triangle', 0.14)); },
-    trace() { this._schedule((t) => { this._noise(t, 0.03, 0.03, 3200, 'circuit'); this._tone(520 + Math.random() * 160, t, 0.04, 'sine', 0.05, 'circuit'); }); },
-    print() { this._schedule((t) => { [392, 523, 659, 784].forEach((f, i) => this._tone(f, t + i * 0.06, 0.18, 'sine', 0.13, 'circuit')); this._noise(t, 0.12, 0.06, 4200, 'circuit'); }); },
+    trace() { this._schedule((t) => { this._noise(t, 0.02, 0.035, 3400 + Math.random() * 400, 'circuit'); this._tone(480 + Math.random() * 220, t, 0.05, 'sine', 0.06, 'circuit'); }); },
+    print() { this._schedule((t) => { this._noise(t, 0.05, 0.07, 4600, 'circuit'); this._tone(600, t, 0.05, 'square', 0.06, 'circuit'); }); },
+    printComplete() { this._schedule((t) => { const notes = [440, 554, 659, 880, 1108]; notes.forEach((f, i) => { this._tone(f, t + i * 0.045, 0.22, 'sine', 0.15, 'circuit'); this._tone(f * 2, t + i * 0.045, 0.16, 'triangle', 0.05, 'circuit'); }); this._noise(t + 0.2, 0.16, 0.05, 5000, 'circuit'); }); },
   };
 
   MUNDA.audio = Audio;

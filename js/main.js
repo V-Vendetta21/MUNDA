@@ -273,13 +273,48 @@
     loomMessages.scrollTop = loomMessages.scrollHeight;
     return item;
   }
+
+  // Thought bubbles shown while Loom is "thinking".
+  function appendLoomThinking() {
+    var item = document.createElement('div');
+    item.className = 'loom-message loom-message--assistant loom-thinking';
+    var label = document.createElement('b');
+    label.textContent = 'LOOM';
+    var bubbles = document.createElement('span');
+    bubbles.className = 'loom-bubbles';
+    bubbles.setAttribute('aria-hidden', 'true');
+    bubbles.innerHTML = '<i></i><i></i><i></i>';
+    item.appendChild(label); item.appendChild(bubbles);
+    loomMessages.appendChild(item);
+    loomMessages.scrollTop = loomMessages.scrollHeight;
+    return item;
+  }
+
+  // Reveal reply text with a typewriter animation (characters cascade in).
+  function typewriter(el, text, onDone) {
+    var i = 0;
+    var chunks = text.split(/(\s+)/);
+    el.textContent = '';
+    el.classList.add('typing');
+    var speed = Math.max(6, Math.min(26, Math.round(text.length / 90)));
+    function step() {
+      if (!document.body.contains(el)) return;
+      if (i >= chunks.length) { el.classList.remove('typing'); if (onDone) onDone(); return; }
+      el.textContent += chunks[i];
+      i++;
+      loomMessages.scrollTop = loomMessages.scrollHeight;
+      setTimeout(step, /^\s+$/.test(chunks[i - 1]) ? 2 : speed);
+    }
+    step();
+  }
+
   async function askLoom(question) {
     var message = String(question || '').trim();
     if (!message || !loomForm || loomForm.dataset.busy === 'true') return;
     loomForm.dataset.busy = 'true'; loomSend.disabled = true;
     appendLoomMessage('user', message);
     loomInput.value = '';
-    var typing = appendLoomMessage('assistant', window.MUNDA_SITE_I18N.t('loom.thinking'), true);
+    var thinking = appendLoomThinking();
     try {
       var response = await fetch('/api/loom', {
         method: 'POST',
@@ -289,14 +324,19 @@
       });
       var data = await response.json().catch(function () { return {}; });
       if (!response.ok) throw new Error(data.error || window.MUNDA_SITE_I18N.t('loom.temp'));
-      typing.remove();
-      appendLoomMessage('assistant', data.reply);
+      thinking.remove();
+      var reply = appendLoomMessage('assistant', '');
+      // animate the reply text in
+      var full = data.reply;
+      typewriter(reply.querySelector('p'), full, function () {});
       loomHistory.push({ role: 'user', content: message }, { role: 'assistant', content: data.reply });
       loomHistory = loomHistory.slice(-8);
     } catch (error) {
-      typing.remove();
+      thinking.remove();
       var networkMessage = window.MUNDA_SITE_I18N.t('loom.unavailable');
-      appendLoomMessage('assistant', error && error.name === 'TypeError' ? networkMessage : (error.message || window.MUNDA_SITE_I18N.t('loom.temp')));
+      var errText = error && error.name === 'TypeError' ? networkMessage : (error.message || window.MUNDA_SITE_I18N.t('loom.temp'));
+      var errReply = appendLoomMessage('assistant', '');
+      typewriter(errReply.querySelector('p'), errText);
     } finally {
       loomForm.dataset.busy = 'false'; loomSend.disabled = false; loomInput.focus();
     }

@@ -728,13 +728,31 @@ body {
 .loom-message b { display:block; margin-bottom:5px; color:#aaa; font:700 9px/1 var(--font-display); letter-spacing:.18em; }.loom-message--user b { color:#444; }.loom-message p { margin:0; font-size:13px; line-height:1.55; white-space:pre-wrap; }
 .loom-message--typing p::after { content:""; display:inline-block; width:18px; height:5px; margin-left:7px; border-radius:5px; background:linear-gradient(90deg,#555,#fff,#555); animation:loomTyping 1s linear infinite; }
 @keyframes loomTyping { to { background-position:36px 0; } }
+/* Loom thinking bubbles */
+.loom-thinking { min-height:44px; }
+.loom-bubbles { display:inline-flex; align-items:center; gap:5px; padding:6px 4px; }
+.loom-bubbles i {
+  width:8px; height:8px; border-radius:50%;
+  background: radial-gradient(circle at 35% 30%, #fff, #9d9d9d 45%, #444 78%);
+  box-shadow: 0 0 10px rgba(255,255,255,.4);
+  animation: loomBubble 1.2s ease-in-out infinite;
+}
+.loom-bubbles i:nth-child(2){ animation-delay:.2s; }
+.loom-bubbles i:nth-child(3){ animation-delay:.4s; }
+@keyframes loomBubble { 0%,60%,100%{ transform:translateY(0); opacity:.5 } 30%{ transform:translateY(-6px); opacity:1 } }
+/* typewriter caret on assistant replies */
+.loom-message--assistant p.typing::after {
+  content:""; display:inline-block; width:2px; height:1em; margin-left:2px;
+  vertical-align:text-bottom; background:#fff; animation:loomCaret .7s steps(1) infinite;
+}
+@keyframes loomCaret { 50% { opacity:0; } }
 .loom-presets { position:relative; display:flex; gap:7px; padding:0 18px 14px; overflow-x:auto; scrollbar-width:none; }.loom-presets::-webkit-scrollbar{display:none}.loom-presets button { flex:0 0 auto; max-width:250px; padding:8px 10px; border:1px solid rgba(255,255,255,.14); border-radius:999px; color:#cfcfcb; background:rgba(255,255,255,.04); font:600 10px/1.3 var(--font-ui); cursor:pointer; }.loom-presets button:hover { border-color:#aaa; color:#fff; }
 .loom-form { position:relative; margin:0 18px; display:grid; grid-template-columns:1fr auto; align-items:end; gap:8px; padding:8px; border:1px solid rgba(255,255,255,.2); border-radius:13px; background:rgba(0,0,0,.38); }
 .loom-form textarea { width:100%; max-height:100px; resize:none; padding:8px; border:0; outline:0; color:#fff; background:transparent; font:13px/1.5 var(--font-ui); }.loom-form textarea::placeholder{color:#888}.loom-form button { min-width:68px; height:44px; border:0; border-radius:9px; color:#050505; background:linear-gradient(135deg,#fff,#858585); font:700 10px/1 var(--font-display); letter-spacing:.11em; cursor:pointer; }.loom-form button i{font-style:normal;margin-left:3px}.loom-form button:disabled{opacity:.45;cursor:wait}
 .loom-privacy { position:relative; margin:10px 18px 15px; color:#777; font:500 9px/1.35 var(--font-ui); }
 @media (max-width: 1040px) { .loom-toggle span:last-child { display:none; }.loom-toggle { padding:9px 11px; } }
 @media (max-width: 760px) { .loom-panel { top:68px; right:12px; max-height:calc(100vh - 80px); }.game-overlay-brand i, .game-overlay-brand > i + * { display:none; }.game-overlay-logo{width:94px}.game-exit{font-size:9px;padding:9px 11px} }
-@media (prefers-reduced-motion: reduce) { .loom-toggle-mark i, .loom-message--typing p::after { animation:none !important; } }
+@media (prefers-reduced-motion: reduce) { .loom-toggle-mark i, .loom-message--typing p::after, .loom-bubbles i, .loom-message--assistant p.typing::after { animation:none !important; } }
 
 /* ============ OFFICIAL-REFERENCE REFINEMENT ============ */
 .site-atmosphere {

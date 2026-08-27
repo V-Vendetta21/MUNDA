@@ -62,7 +62,15 @@
       if (!this.active || this.done || !this.held) return;
       const p = { x, y };
       const last = this.tracePath[this.tracePath.length - 1];
-      if (!last || Math.hypot(x - last.x, y - last.y) > 3) this.tracePath.push(p);
+      if (!last || Math.hypot(x - last.x, y - last.y) > 3) {
+        this.tracePath.push(p);
+        // interactive printing tick, throttled so it doesn't stutter
+        const now = performance.now();
+        if (!this._lastTick || now - this._lastTick > 80) {
+          this._lastTick = now;
+          MUNDA.audio.print?.();
+        }
+      }
       // recompute coverage: fraction of target points within tol of the trail
       const tol = Math.max(18, Math.min(30, this.cssW * 0.035));
       let traced = 0;
@@ -72,7 +80,6 @@
       this.coverage = this.pointsPx.length ? traced / this.pointsPx.length : 0;
       const acc = MUNDA.CircuitTrace.accuracy(this.coverage);
       MUNDA.Screens.setHint(MUNDA.t('hint.trace') + ' · ' + acc + '%');
-      MUNDA.audio.trace?.();
       if (this.coverage >= 1) { this.done = true; this.held = false; this.complete(); }
     },
 
@@ -106,7 +113,7 @@
       if (!this.active) return;
       const acc = MUNDA.CircuitTrace.accuracy(this.coverage);
       this.active = false;
-      MUNDA.audio.print?.();
+      if (MUNDA.audio.printComplete) MUNDA.audio.printComplete();
       const cb = this.onDone;
       this.onDone = null;
       if (cb) cb(acc);
