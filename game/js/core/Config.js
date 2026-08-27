@@ -18,15 +18,15 @@
   // Base wire color catalogue. Each entry:
   //   id, name, base (main color), dark (shade for cable depth), glow, sym (accessibility symbol shape)
   MUNDA.WIRE_CATALOG = [
-    { id: 'red',     name: 'Red',            base: '#ff4d5e', dark: '#5a0e18', glow: '#ff7d89', sym: 'circle' },
-    { id: 'blue',    name: 'Electric Blue',  base: '#2f7bff', dark: '#0e2d6e', glow: '#5b9bff', sym: 'square' },
-    { id: 'yellow',  name: 'Yellow',         base: '#ffd23f', dark: '#6e5a06', glow: '#ffe98a', sym: 'triangle' },
-    { id: 'magenta', name: 'Magenta',        base: '#ff3da6', dark: '#6e0f3e', glow: '#ff7ac1', sym: 'diamond' },
-    { id: 'cyan',    name: 'Cyan',           base: '#2ad2d9', dark: '#0b5357', glow: '#5ce8ee', sym: 'hex' },
-    { id: 'white',   name: 'White',          base: '#e9eef5', dark: '#62697a', glow: '#ffffff', sym: 'cross' },
-    { id: 'orange',  name: 'Orange',         base: '#ff8a2a', dark: '#6e3a08', glow: '#ffab66', sym: 'ring' },
-    { id: 'violet',  name: 'Violet',         base: '#9b5cff', dark: '#3a1e6e', glow: '#b98aff', sym: 'star' },
-    { id: 'green',   name: 'Green',          base: '#2fe06a', dark: '#0c5a2c', glow: '#5cff8f', sym: 'plus' },
+    { id:'red',name:'Pure White',base:'#f8f8f6',dark:'#6f6f6c',glow:'#ffffff',sym:'triangle',pattern:'solid',stiffness:.91 },
+    { id:'blue',name:'Silver Dash',base:'#d3d3cf',dark:'#555553',glow:'#f4f4f2',sym:'circle',pattern:'dashed',stiffness:.86 },
+    { id:'yellow',name:'Platinum Dot',base:'#b9b9b6',dark:'#494947',glow:'#e7e7e4',sym:'diamond',pattern:'dotted',stiffness:.84 },
+    { id:'magenta',name:'Graphite Double',base:'#929290',dark:'#343433',glow:'#cfcfcb',sym:'square',pattern:'double',stiffness:.94 },
+    { id:'cyan',name:'Steel Stripe',base:'#dededb',dark:'#60605e',glow:'#ffffff',sym:'hex',pattern:'striped',stiffness:.88 },
+    { id:'white',name:'Carbon Segment',base:'#777775',dark:'#222221',glow:'#b8b8b5',sym:'cross',pattern:'segmented',stiffness:.82 },
+    { id:'orange',name:'Titanium Braid',base:'#c3c3c0',dark:'#444442',glow:'#efefec',sym:'ring',pattern:'braided',stiffness:.80 },
+    { id:'violet',name:'Smoke Tech',base:'#666664',dark:'#191919',glow:'#aaa9a6',sym:'star',pattern:'tech',stiffness:.90 },
+    { id:'green',name:'High Contrast',base:'#ffffff',dark:'#050505',glow:'#ffffff',sym:'plus',pattern:'contrast',stiffness:.96 },
   ];
 
   // Default settings
@@ -38,6 +38,14 @@
       highContrast: false, // UI high-contrast mode
       muted: false,        // audio mute
       soundVolume: 0.7,
+      interfaceVolume: 0.72,
+      circuitVolume: 0.78,
+      ambienceVolume: 0.36,
+      haptics: true,
+      screenShake: true,
+      largeTerminals: false,
+      strongPatterns: false,
+      tutorials: true,
     },
     custom: {
       theme: 'mono',             // single monochrome theme
@@ -54,6 +62,14 @@
       runsCompleted: 0,
       totalConnections: 0,
       totalMistakes: 0,
+      perfectBoards: 0,
+      majorCompleted: 0,
+      averagePrecision: 0,
+      averageRouting: 0,
+      ratedBoards: 0,
+      rank: 'TRAINEE',
+      tutorialsSeen: {},
+      dailyResults: {},
       unlockedThemes: ['professional'],
     },
   };

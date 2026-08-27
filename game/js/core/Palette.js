@@ -48,7 +48,7 @@
         dark = U.mix(base, '#000000', 0.68);
         glow = U.mix(base, '#ffffff', 0.30);
       }
-      return { id: w.id, name: w.name, base, dark, glow, sym: w.sym };
+      return { id: w.id, name: w.name, base, dark, glow, sym: w.sym, pattern: w.pattern || 'solid', stiffness: w.stiffness || 0.88 };
     });
   }
 

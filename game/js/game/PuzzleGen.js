@@ -1,173 +1,20 @@
-/* ============================================================
-   MUNDA — PuzzleGen.js
-   Procedural generation of wiring boards.
-   Every generated board is guaranteed solvable: terminals never
-   overlap, each color appears exactly once per side, and the
-   matching is a bijection. Output is in normalized coordinates
-   (fractions of board height) so it survives resize.
-   ============================================================ */
-(function (global) {
-  'use strict';
-  const MUNDA = global.MUNDA;
-  const U = MUNDA;
+/* MUNDA — seeded procedural assembly generation with validation retries */
+(function(global){'use strict';const M=global.MUNDA,U=M;
+ function shuffle(items,random){const a=items.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+ function selectColorIds(n,unused,random){return shuffle(M.WIRE_CATALOG.map(w=>w.id),random||Math.random).slice(0,n)}
+ function positions(n,random,noise){const top=.1,bottom=.92,spacing=(bottom-top)/n;return Array.from({length:n},(_,i)=>Math.max(top+.005,Math.min(bottom-.005,top+spacing*(i+.5)+(random()*2-1)*spacing*.34*(noise||0))))}
+ function makeObstacleRoutes(wires,obstacles){return wires.map((w,i)=>{const a={x:.13,y:w.leftYfrac},b={x:.87,y:w.rightYfrac};if(!obstacles.length)return[a,b];const o=obstacles[0],top=Math.max(.07,o.y-.07),bottom=Math.min(.95,o.y+o.h+.07),safe=(i%2?bottom:top);return[a,{x:o.x-.06,y:safe},{x:o.x+o.w+.06,y:safe},b]})}
+ function build(params,resolved,seed){const random=M.Mechanics.rng(seed),n=params.wires,mechanics=params.mechanics||M.Mechanics.forStage(params.level,params.mode,seed,params.training);const ids=selectColorIds(n,0,random),rightOrder=shuffle(ids,random),leftY=positions(n,random,params.routeNoise),rightY=positions(n,random,params.routeNoise);const colors=Object.fromEntries(resolved.map(w=>[w.id,w]));const wires=[],left=[],right=[];
+  for(let i=0;i<n;i++){const c=colors[ids[i]],rightSlot=rightOrder.indexOf(ids[i]);const wire={index:i,colorId:c.id,name:c.name,base:c.base,dark:c.dark,glow:c.glow,sym:c.sym,pattern:c.pattern||'solid',stiffness:c.stiffness||.88,leftYfrac:leftY[i],rightYfrac:rightY[rightSlot],connected:false,error:false,label:i+1,damaged:mechanics.active.includes('damaged')&&i<Math.max(1,Math.floor(n/3)),repaired:false,branches:mechanics.active.includes('split')&&i===0?2:1};wires.push(wire);left.push({slot:i,wire:i,yfrac:leftY[i],colorId:c.id,locked:mechanics.active.includes('locks')&&i%3===0});}
+  for(let slot=0;slot<n;slot++){const wire=wires.findIndex(w=>w.colorId===rightOrder[slot]);right.push({slot,wire,yfrac:rightY[slot],colorId:rightOrder[slot],locked:mechanics.active.includes('locks')&&wire%3===0,motion:mechanics.active.includes('moving')?{type:wire%2?'track':'oscillate',amplitude:.035,speed:.00045+wire*.00003,phase:wire}:null})}
+  const obstacles=mechanics.active.includes('obstacles')?[{id:'housing-0',type:'CIRCUIT HOUSING',x:.44,y:.32,w:.12,h:.34}]:[];
 
-  // confusable color groups (visual similarity) used at higher difficulty
-  const SIMILAR_GROUPS = [
-    ['red', 'orange'],
-    ['blue', 'violet'],
-    ['cyan', 'green'],
-    ['yellow', 'white'],
-  ];
-
-  // choose which color ids appear on the board
-  function selectColorIds(n, similarPairs) {
-    const distinct = MUNDA.WIRE_CATALOG.map((w) => w.id);
-    const chosen = [];
-    const pairs = Math.min(similarPairs, SIMILAR_GROUPS.length, Math.floor(n / 2));
-    const used = U.shuffle(SIMILAR_GROUPS).slice(0, pairs);
-    for (const g of used) {
-      for (const id of g) if (chosen.length < n && !chosen.includes(id)) chosen.push(id);
-    }
-    const rest = U.shuffle(distinct.filter((id) => !chosen.includes(id)));
-    for (const id of rest) { if (chosen.length >= n) break; chosen.push(id); }
-    // safety fill (never needed with n<=9 catalogue, but guard anyway)
-    let k = 0;
-    while (chosen.length < n && k < 1000) {
-      const id = distinct[k % distinct.length];
-      if (!chosen.includes(id)) chosen.push(id);
-      k++;
-    }
-    return U.shuffle(chosen);
-  }
-
-  // build a permutation with an approximate inversion count = density * max
-  function makePermutation(n, density) {
-    const remaining = [];
-    for (let i = 0; i < n; i++) remaining.push(i);
-    const perm = [];
-    const maxInv = (n * (n - 1)) / 2;
-    const targetInv = Math.round(density * maxInv);
-    let inv = 0;
-    for (let i = n; i > 0; i--) {
-      const maxSkip = i - 1;
-      let skip = 0;
-      if (inv < targetInv) {
-        let budget = targetInv - inv;
-        skip = Math.min(maxSkip, budget);
-        if (density > 0.05) {
-          const jitter = Math.floor(Math.random() * Math.max(1, Math.round(maxSkip * 0.5)));
-          skip = Math.min(maxSkip, skip + (Math.random() < 0.5 ? jitter : -jitter));
-        }
-        skip = Math.max(0, skip);
-      }
-      inv += skip;
-      perm.push(remaining.splice(skip, 1)[0]);
-    }
-    return perm;
-  }
-
-  // even distribution with controlled jitter that never lets adjacent rows overlap
-  function makePositions(n, topFrac, bottomFrac, routeNoise) {
-    const spacing = (bottomFrac - topFrac) / n;
-    const maxJit = spacing * 0.5 * Math.min(0.8, routeNoise);
-    const pos = [];
-    for (let s = 0; s < n; s++) {
-      let y = (topFrac + spacing * (s + 0.5));
-      y += (Math.random() * 2 - 1) * maxJit;
-      pos.push(U.clamp(y, topFrac + 0.005, bottomFrac - 0.005));
-    }
-    return pos;
-  }
-
-  function generate(params, resolvedWires) {
-    const n = params.wires;
-    const top = 0.10, bottom = 0.92;
-    const railX = 0.13, railX2 = 0.87;
-
-    const colorIds = selectColorIds(n, params.similarPairs);
-    const leftOrder = colorIds;                 // left rail top→bottom in this color order
-    const perm = makePermutation(n, params.density);
-    const rightOrder = perm.map((idx) => leftOrder[idx]); // permuted color order on right
-
-    // slot y positions
-    const leftPos = makePositions(n, top, bottom, params.routeNoise);
-    const rightPos = makePositions(n, top, bottom, params.routeNoise);
-
-    // map color -> right slot index
-    const rightSlotOf = {};
-    rightOrder.forEach((cid, s) => { rightSlotOf[cid] = s; });
-
-    const colorOf = {};
-    resolvedWires.forEach((w) => { colorOf[w.id] = w; });
-
-    // build wires + terminals
-    const wires = [];
-    const left = [], right = [];
-
-    for (let s = 0; s < n; s++) {
-      const cid = leftOrder[s];
-      const c = colorOf[cid];
-      const rightSlot = rightSlotOf[cid];
-      wires.push({
-        index: s,
-        colorId: cid,
-        name: c.name,
-        base: c.base, dark: c.dark, glow: c.glow,
-        sym: c.sym,
-        leftYfrac: leftPos[s],
-        rightYfrac: rightPos[rightSlot],
-        connected: false,
-        error: false,
-        label: s + 1,           // number badge (left side)
-      });
-      left.push({ slot: s, wire: s, yfrac: leftPos[s], colorId: cid });
-      right.push({ slot: s, wire: -1, yfrac: rightPos[s], colorId: rightOrder[s] });
-    }
-
-    // bind right terminals to their wire index
-    for (let s = 0; s < n; s++) {
-      right[s].wire = wires.findIndex((w) => w.colorId === rightOrder[s]);
-    }
-
-    const puzzle = {
-      count: n,
-      wires,
-      left,
-      right,
-      railXfrac: railX,
-      railX2frac: railX2,
-      leftRail: railX,
-      rightRail: railX2,
-      params,
-      // accessibility labels — always numbers + symbols, never color alone
-    };
-
-    // validation: every color present exactly once per side, positions in range
-    if (!validate(puzzle)) {
-      return generate(params, resolvedWires); // safe retry
-    }
-    return puzzle;
-  }
-
-  function validate(p) {
-    const n = p.count;
-    if (p.wires.length !== n) return false;
-    if (p.left.length !== n || p.right.length !== n) return false;
-    const lc = {}, rc = {};
-    for (const t of p.left) { if (!(t.colorId in lc)) lc[t.colorId] = 0; lc[t.colorId]++; if (t.wire < 0 || t.wire >= n) return false; }
-    for (const t of p.right) { if (!(t.colorId in rc)) rc[t.colorId] = 0; rc[t.colorId]++; if (t.wire < 0 || t.wire >= n) return false; }
-    for (const id in lc) if (lc[id] !== 1 || (rc[id] || 0) !== 1) return false;
-    for (const id in rc) if (rc[id] !== 1 || (lc[id] || 0) !== 1) return false;
-    // every wire's terminals exist
-    for (const w of p.wires) {
-      const lt = p.left.find((t) => t.wire === w.index);
-      const rt = p.right.find((t) => t.wire === w.index);
-      if (!lt || !rt) return false;
-      if (lt.yfrac < 0.02 || lt.yfrac > 0.98 || rt.yfrac < 0.02 || rt.yfrac > 0.98) return false;
-    }
-    return true;
-  }
-
-  MUNDA.puzzleGen = { generate, selectColorIds };
-
-})(typeof window !== 'undefined' ? window : this);
+  const routes=makeObstacleRoutes(wires,obstacles.slice(0,1));
+  const guides=mechanics.active.includes('guides')?wires.slice(0,Math.min(3,n)).map((w,i)=>({id:'guide-'+i,type:i%2?'TEXTILE CLIP':'CABLE GUIDE',x:routes[i].length>2?routes[i][1].x:.5,y:routes[i].length>2?routes[i][1].y:(w.leftYfrac+w.rightYfrac)/2,wire:i,required:i===0,optional:i!==0})):[];
+  const sequence=mechanics.active.includes('sequence')?shuffle(wires.map(w=>w.index),random):null;
+  const decoys=mechanics.active.includes('decoys')?[{x:.78,y:.5,sym:'ring',clue:'NO INDEX',fake:true}]:[];
+  return{count:n,wires,left,right,railXfrac:.13,railX2frac:.87,leftRail:.13,rightRail:.87,params:Object.assign({},params,{seed,mechanics}),mechanics,obstacles,guides,routes,sequence,sequenceCursor:0,decoys,hidden:mechanics.active.includes('hidden'),blackout:mechanics.active.includes('blackout'),timerSeconds:mechanics.timerSeconds||0,power:mechanics.active.includes('power')?{limit:3,order:[0,2,1]}:null,splitters:mechanics.active.includes('split')?[{wire:0,x:.52,y:.5,branches:2}]:[],major:mechanics.active.includes('major')?{phase:1,totalPhases:5}:null,validation:null};
+ }
+ function generate(params,resolved){const base=params.seed||((params.level||1)*7919+(params.mode||'production').length*101);for(let attempt=0;attempt<24;attempt++){const puzzle=build(params,resolved,base+attempt);const check=M.PuzzleValidator?M.PuzzleValidator.validate(puzzle):{valid:true,errors:[]};puzzle.validation=check;if(check.valid)return puzzle}throw new Error('Unable to generate a verified assembly board')}
+ M.puzzleGen={generate,selectColorIds};
+})(typeof window!=='undefined'?window:this);

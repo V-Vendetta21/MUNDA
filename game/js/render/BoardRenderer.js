@@ -24,6 +24,9 @@
     failure: null,
     hazards: [],
     virusHit: null,
+    reveal: null,
+    dragCable: null,
+    branchReady: {},
     raf: null,
     lastT: 0,
 
@@ -56,11 +59,24 @@
       this.complete = null;
       this.failure = null;
       this.virusHit = null;
+      this.reveal = null;
+      this.dragCable = null;
+      this.branchReady = {};
       this.hazards = this.createVirusHazards(level || 1);
     },
 
     setSelection: function (sel) { this.selection = sel; },
-    setDrag: function (drag) { this.drag = drag; },
+    setDrag: function (drag) {
+      this.drag = drag;
+      if (drag && !this.dragCable) {
+        const start = drag.side === 'left' ? this.termPos(drag.wire, 'left') : this.termPosRight(drag.wire);
+        this.dragCable = MUNDA.CablePhysics.create(start, { x: drag.lastX || drag.x, y: drag.lastY || drag.y }, this.cssW < 600 ? 8 : 12);
+      }
+      if (!drag) this.dragCable = null;
+    },
+    revealDestination: function (wire, duration) { this.reveal = { wire, until: performance.now() + (duration || 1000) }; },
+    repairPulse: function (wire) { this.connectPulses[wire] = { t: 0, repair: true }; },
+    setBranchReady: function (wire) { this.branchReady[wire] = true; this.connectPulses[wire] = { t: 0 }; },
 
     setHover: function (x, y) {
       if (x < 0) { this.hover = null; this.hoverPos = null; return; }
@@ -72,7 +88,7 @@
     radius: function () {
       const r = this.params ? this.params.terminalRadius : 20;
       const min = this.cssW < 500 ? 17 : 15;
-      let rad = Math.max(r, min);
+      let rad = Math.max(r, min) + (MUNDA.state && MUNDA.state.settings.largeTerminals ? 4 : 0);
       // fit-clamp so terminals never overlap at high wire counts
       if (this.puzzle && this.cssH > 0) {
         const spacing = (this.cssH * 0.82) / Math.max(1, this.puzzle.count);
@@ -91,8 +107,27 @@
     },
     termPosRight: function (wire) {
       const p = this.puzzle.wires[wire];
-      const y = U.clamp(p.rightYfrac * this.cssH, this.radius() + 6, this.cssH - this.radius() - 6);
+      const terminal = this.puzzle.right.find((t) => t.wire === wire);
+      let yf = p.rightYfrac;
+      if (terminal && terminal.motion && !(MUNDA.game && MUNDA.game.drag)) {
+        const m = terminal.motion;
+        yf += Math.sin(this.lastT * m.speed + m.phase) * m.amplitude;
+      }
+      const y = U.clamp(yf * this.cssH, this.radius() + 6, this.cssH - this.radius() - 6);
       return { x: this.railX2(), y };
+    },
+
+    normalizeRoute: function (points, wire, fromSide, toSide) {
+      let route = MUNDA.Routing.simplify(points, 7);
+      const start = fromSide === 'left' ? this.termPos(wire, 'left') : this.termPosRight(wire);
+      const end = toSide === 'right' ? this.termPosRight(wire) : this.termPos(wire, 'left');
+      route[0] = start; route[route.length - 1] = end;
+      if (fromSide === 'right') route = route.reverse();
+      return route;
+    },
+    defaultRoute: function (wire) {
+      const p = this.puzzle.routes && this.puzzle.routes[wire];
+      return p ? p.map((q) => ({ x: q.x * this.cssW, y: q.y * this.cssH })) : [this.termPos(wire, 'left'), this.termPosRight(wire)];
     },
 
     hitTest: function (x, y) {
@@ -165,6 +200,20 @@
       c.bezierCurveTo(path.c1.x, path.c1.y, path.c2.x, path.c2.y, path.x3, path.y3);
     },
 
+    _tracePolyline: function (points) {
+      const c = this.ctx; c.beginPath();
+      points.forEach((p, i) => {
+        if (!i) c.moveTo(p.x, p.y);
+        else { const prev = points[i - 1]; c.quadraticCurveTo(prev.x, prev.y, (prev.x + p.x) / 2, (prev.y + p.y) / 2); }
+      });
+      const last = points[points.length - 1]; if (last) c.lineTo(last.x, last.y);
+    },
+
+    _dashFor: function (pattern) {
+      if (MUNDA.state && MUNDA.state.settings.strongPatterns && pattern === 'solid') return [12, 5];
+      return pattern === 'dashed' ? [12, 7] : pattern === 'dotted' ? [2, 7] : pattern === 'segmented' ? [18, 5] : pattern === 'braided' ? [5, 3] : pattern === 'tech' ? [16, 4, 3, 4] : [];
+    },
+
     // ---- animation triggers ----
     animateConnect: function (index) {
       this.connectPulses[index] = { t: 0 };
@@ -204,6 +253,7 @@
     // ---- main loop ----
     loop: function (t) {
       this.lastT = t;
+      if (MUNDA.game && MUNDA.game.tick) MUNDA.game.tick(t);
       this.draw();
       this.raf = requestAnimationFrame(this.loop);
     },
@@ -257,12 +307,30 @@
       }
 
       this.drawRailBases(c);
+      this.drawRoutingHardware(c);
       this.drawWires(c);
       this.drawVirusHazards(c);
       if (this.drag && this.selection) this.drawDragLine(c);
       this.drawTerminals(c);
       if (this.failure && this.failure.active) this.drawSparks(c);
       if (this.virusHit) this.drawVirusParticles(c);
+    },
+
+    drawRoutingHardware: function (c) {
+      c.save();
+      for (const o of this.puzzle.obstacles || []) {
+        const x=o.x*this.cssW,y=o.y*this.cssH,w=o.w*this.cssW,h=o.h*this.cssH;
+        const g=c.createLinearGradient(x,y,x+w,y+h);g.addColorStop(0,'#d9d9d6');g.addColorStop(.16,'#5e5e5c');g.addColorStop(.55,'#171717');g.addColorStop(1,'#050505');
+        this.roundRect(x,y,w,h,8);c.fillStyle=g;c.shadowColor='rgba(0,0,0,.8)';c.shadowBlur=18;c.fill();c.shadowBlur=0;c.strokeStyle='rgba(255,255,255,.28)';c.lineWidth=1.2;c.stroke();
+        c.fillStyle='rgba(255,255,255,.58)';c.font='600 8px Roboto,Arial';c.textAlign='center';c.fillText(o.type,x+w/2,y+h/2+3);
+        for(const q of [[x+8,y+8],[x+w-8,y+8],[x+8,y+h-8],[x+w-8,y+h-8]]){c.beginPath();c.arc(q[0],q[1],2.5,0,Math.PI*2);c.fillStyle='#1b1b1b';c.fill();c.strokeStyle='#c4c4c0';c.stroke()}
+      }
+      for (const g of this.puzzle.guides || []) {
+        const x=g.x*this.cssW,y=g.y*this.cssH,r=g.required?13:10;c.save();c.translate(x,y);c.shadowColor='#fff';c.shadowBlur=g.required?12:5;c.strokeStyle=g.required?'#fff':'#8b8b88';c.lineWidth=g.required?2:1.2;c.beginPath();c.arc(0,0,r,0,Math.PI*2);c.stroke();c.beginPath();c.arc(0,0,r-5,0,Math.PI*2);c.stroke();c.fillStyle='#090909';c.fill();c.fillStyle='#d7d7d4';c.font='700 7px Roboto,Arial';c.textAlign='center';c.fillText(g.required?'REQ':'OPT',0,2.5);c.restore();
+      }
+      for(const d of this.puzzle.decoys||[]){const x=d.x*this.cssW,y=d.y*this.cssH;c.setLineDash([2,4]);c.strokeStyle='#777';c.lineWidth=1;c.beginPath();c.arc(x,y,14,0,Math.PI*2);c.stroke();c.setLineDash([]);c.fillStyle='#777';c.font='600 7px Roboto,Arial';c.textAlign='center';c.fillText(d.clue,x,y+25)}
+      for(const s of this.puzzle.splitters||[]){const x=s.x*this.cssW,y=s.y*this.cssH;c.translate(0,0);c.fillStyle='#0b0b0b';c.strokeStyle='#eee';c.lineWidth=1.4;this.roundRect(x-16,y-11,32,22,5);c.fill();c.stroke();c.fillStyle='#eee';c.font='700 9px Roboto,Arial';c.textAlign='center';c.fillText('J'+String(s.wire+1),x,y+3)}
+      c.restore();
     },
 
     drawVirusHazards: function (c) {
@@ -274,9 +342,9 @@
         c.translate(pos.x, pos.y);
         c.rotate(this.lastT / 9000 + hazard.phase);
         c.globalAlpha = 0.82 + pulse * 0.16;
-        c.shadowColor = '#55e58b';
+        c.shadowColor = '#ffffff';
         c.shadowBlur = 9 + pulse * 5;
-        c.strokeStyle = '#70ef9b';
+        c.strokeStyle = '#dededb';
         c.lineWidth = 1.3;
         for (let i = 0; i < 8; i++) {
           const angle = i / 8 * Math.PI * 2;
@@ -285,16 +353,16 @@
           const x2 = Math.cos(angle) * (r + 4);
           const y2 = Math.sin(angle) * (r + 4);
           c.beginPath(); c.moveTo(x1, y1); c.lineTo(x2, y2); c.stroke();
-          c.beginPath(); c.arc(x2, y2, 1.7, 0, Math.PI * 2); c.fillStyle = '#9dffb8'; c.fill();
+          c.beginPath(); c.arc(x2, y2, 1.7, 0, Math.PI * 2); c.fillStyle = '#ffffff'; c.fill();
         }
         const grad = c.createRadialGradient(-r * 0.25, -r * 0.3, 1, 0, 0, r);
-        grad.addColorStop(0, '#b8ffc8');
-        grad.addColorStop(0.45, '#36c96d');
-        grad.addColorStop(1, '#087239');
+        grad.addColorStop(0, '#ffffff');
+        grad.addColorStop(0.45, '#a5a5a2');
+        grad.addColorStop(1, '#242424');
         c.beginPath(); c.arc(0, 0, r, 0, Math.PI * 2); c.fillStyle = grad; c.fill();
         c.shadowBlur = 0;
-        c.strokeStyle = '#063f24'; c.lineWidth = 1.4; c.stroke();
-        c.fillStyle = 'rgba(4,49,27,.72)';
+        c.strokeStyle = '#090909'; c.lineWidth = 1.4; c.stroke();
+        c.fillStyle = 'rgba(5,5,5,.72)';
         c.beginPath(); c.arc(-r * .28, -r * .12, 1.7, 0, Math.PI * 2); c.fill();
         c.beginPath(); c.arc(r * .24, r * .20, 1.4, 0, Math.PI * 2); c.fill();
         c.beginPath(); c.arc(r * .18, -r * .30, 1.1, 0, Math.PI * 2); c.fill();
@@ -309,8 +377,8 @@
       for (const particle of state.particles) {
         if (particle.life <= 0) continue;
         c.globalAlpha = particle.life;
-        c.fillStyle = '#7dffa7';
-        c.shadowColor = '#38db75';
+        c.fillStyle = '#ffffff';
+        c.shadowColor = '#bcbcb8';
         c.shadowBlur = 10;
         c.beginPath(); c.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2); c.fill();
       }
@@ -349,7 +417,8 @@
 
     drawWire: function (c, index) {
       const w = this.puzzle.wires[index];
-      const path = this.wirePath(index);
+      const points = w.route ? w.route.map((p) => ({ x: p.x * this.cssW, y: p.y * this.cssH })) : null;
+      const path = points ? null : this.wirePath(index);
       const isSel = this.selection && this.selection.wire === index;
       const isErr = this.failure && this.failure.active && (this.failure.a === index || this.failure.b === index);
       const connected = w.connected;
@@ -371,22 +440,28 @@
       c.shadowColor = w.glow;
       c.shadowBlur = (lit ? 16 : 6) * (1 + errFlash * 2);
       c.lineCap = 'round';
+      c.setLineDash(this._dashFor(w.pattern));
       c.strokeStyle = w.dark;
       c.lineWidth = lineW + 1.6;
-      this._tracePath(path); c.stroke();
+      points ? this._tracePolyline(points) : this._tracePath(path); c.stroke();
       c.strokeStyle = color;
       c.lineWidth = lineW;
-      this._tracePath(path); c.stroke();
+      points ? this._tracePolyline(points) : this._tracePath(path); c.stroke();
       if (lit && !isErr) {
+        c.setLineDash([]);
         c.strokeStyle = 'rgba(255,255,255,0.5)';
         c.lineWidth = lineW * 0.35;
-        this._tracePath(path); c.stroke();
+        points ? this._tracePolyline(points) : this._tracePath(path); c.stroke();
+      }
+      if (w.pattern === 'double') {
+        c.setLineDash([]); c.strokeStyle = 'rgba(0,0,0,0.78)'; c.lineWidth = 1;
+        points ? this._tracePolyline(points) : this._tracePath(path); c.stroke();
       }
       c.restore();
 
       if (this.connectPulses[index]) {
         const pt = U.easeInOut(this.connectPulses[index].t);
-        const ppos = this.bezierPoint(path, pt);
+        const ppos = points ? this.polylinePoint(points, pt) : this.bezierPoint(path, pt);
         c.save();
         c.globalAlpha = (1 - this.connectPulses[index].t) * 0.9 + 0.1;
         c.shadowColor = '#ffffff';
@@ -404,21 +479,32 @@
       return { x, y };
     },
 
+    polylinePoint: function (points, t) {
+      const total = MUNDA.Routing.length(points); let target = total * t, seen = 0;
+      for (let i = 1; i < points.length; i++) {
+        const a = points[i - 1], b = points[i], d = U.dist(a.x, a.y, b.x, b.y);
+        if (seen + d >= target) { const f = (target - seen) / (d || 1); return { x: U.lerp(a.x, b.x, f), y: U.lerp(a.y, b.y, f) }; }
+        seen += d;
+      }
+      return points[points.length - 1];
+    },
+
     drawDragLine: function (c) {
       if (!this.drag) return;
       const w = this.puzzle.wires[this.drag.wire];
       const srcPos = this.drag.side === 'left' ? this.termPos(this.drag.wire, 'left') : this.termPosRight(this.drag.wire);
       const end = { x: this.drag.lastX, y: this.drag.lastY };
-      const midX = (srcPos.x + end.x) / 2;
+      if (!this.dragCable) this.dragCable = MUNDA.CablePhysics.create(srcPos, end, this.cssW < 600 ? 8 : 12);
+      MUNDA.CablePhysics.step(this.dragCable, srcPos, end, 16);
+      if (this.drag.route && this.drag.route.length > 1) MUNDA.CablePhysics.follow(this.dragCable, this.drag.route);
+      const points = this.dragCable.points;
       c.save();
       c.shadowColor = w.glow;
       c.shadowBlur = 20;
       c.strokeStyle = w.dark; c.lineWidth = 6; c.lineCap = 'round';
-      c.beginPath(); c.moveTo(srcPos.x, srcPos.y);
-      c.bezierCurveTo(midX, srcPos.y, midX, end.y, end.x, end.y); c.stroke();
+      c.setLineDash(this._dashFor(w.pattern)); this._tracePolyline(points); c.stroke();
       c.strokeStyle = w.base; c.lineWidth = 4.2;
-      c.beginPath(); c.moveTo(srcPos.x, srcPos.y);
-      c.bezierCurveTo(midX, srcPos.y, midX, end.y, end.x, end.y); c.stroke();
+      this._tracePolyline(points); c.stroke(); c.setLineDash([]);
       c.shadowBlur = 22;
       c.fillStyle = '#d8d8d4';
       c.beginPath(); c.arc(end.x, end.y, 6, 0, Math.PI * 2); c.fill();
@@ -431,7 +517,10 @@
       const p = this.puzzle;
       const r = this.radius();
       for (const t of p.left) this.drawTerminal(c, t.wire, 'left', this.termPos(t.wire, 'left'), r);
-      for (const t of p.right) this.drawTerminal(c, t.wire, 'right', this.termPosRight(t.wire), r);
+      for (const t of p.right) {
+        if (t.motion) { const pos=this.termPosRight(t.wire); c.save(); c.strokeStyle='rgba(255,255,255,.18)'; c.lineWidth=2; c.beginPath(); c.moveTo(pos.x,pos.y-this.cssH*t.motion.amplitude-8); c.lineTo(pos.x,pos.y+this.cssH*t.motion.amplitude+8); c.stroke(); c.restore(); }
+        this.drawTerminal(c, t.wire, 'right', this.termPosRight(t.wire), r);
+      }
     },
 
     drawTerminal: function (c, wireIndex, side, pos, r) {
@@ -444,6 +533,9 @@
       const lit = connected || isSel || (this.complete && this.complete.active && completeT > 0);
       const errFlash = isErr ? (Math.sin(this.lastT / 30) * 0.5 + 0.5) : 0;
       const pulse = isSel ? (Math.sin(this.lastT / 260) * 0.5 + 0.5) : 0;
+      const terminal = side === 'left' ? this.puzzle.left.find((t) => t.wire === wireIndex) : this.puzzle.right.find((t) => t.wire === wireIndex);
+      const locked = terminal && terminal.locked;
+      const concealed = side === 'right' && this.puzzle.hidden && !connected && !(this.reveal && this.reveal.wire === wireIndex && this.reveal.until > this.lastT);
 
       c.save();
       c.shadowBlur = lit ? 18 : (isSel ? 12 : 6);
@@ -482,8 +574,16 @@
         c.restore();
       }
 
-      this.drawSymbol(c, w.sym, pos.x, pos.y, r * 0.5, w.dark, lit ? w.base : '#d8d8d4');
-      this.drawBadge(c, w.label, pos, side, r, connected, isErr, isSel);
+      if (!concealed) {
+        this.drawSymbol(c, w.sym, pos.x, pos.y, r * 0.5, w.dark, lit ? w.base : '#d8d8d4');
+        this.drawBadge(c, w.label, pos, side, r, connected, isErr, isSel);
+      } else {
+        c.fillStyle='rgba(255,255,255,.28)';c.font='700 12px Roboto,Arial';c.textAlign='center';c.fillText('—',pos.x,pos.y+4);
+      }
+      if (locked) {
+        c.shadowBlur=8;c.strokeStyle='#fff';c.lineWidth=2;c.beginPath();c.arc(pos.x,pos.y,r+4,-Math.PI/2,Math.PI*(terminal.calibration?1.2:.35));c.stroke();
+        c.fillStyle='#0a0a0a';c.strokeStyle='#fff';this.roundRect(pos.x-7,pos.y-5,14,11,2);c.fill();c.stroke();
+      }
       c.restore();
     },
 

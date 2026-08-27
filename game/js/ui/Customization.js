@@ -59,6 +59,7 @@
               <div class="k">Animation intensity<small>Reduce for motion sensitivity</small></div>
               <div class="ctl"><input type="range" id="s-motion" min="0" max="1" step="0.05" value="${s.motion}"><span class="set-val" id="s-motion-v">${s.motion>=0.8?'Full':(s.motion>=0.4?'Reduced':'Minimal')}</span></div>
             </div>
+            ${[['largeTerminals','Large terminal targets'],['strongPatterns','Stronger cable patterns'],['screenShake','Screen vibration'],['haptics','Mobile haptics'],['tutorials','Contextual tutorials']].map(([key,label])=>`<div class="set-row"><div class="k">${label}</div><label class="switch"><input type="checkbox" data-setting="${key}" ${s[key]?'checked':''}><span class="track"></span></label></div>`).join('')}
           </div>
 
           <div class="panel-section">
@@ -68,9 +69,10 @@
               <label class="switch"><input type="checkbox" id="s-mute" ${s.muted?'checked':''}><span class="track"></span></label>
             </div>
             <div class="set-row">
-              <div class="k">Volume</div>
+              <div class="k">Master</div>
               <div class="ctl"><input type="range" id="s-vol" min="0" max="1" step="0.05" value="${s.soundVolume}"><span class="set-val" id="s-vol-v">${Math.round(s.soundVolume*100)}%</span></div>
             </div>
+            ${[['interfaceVolume','Interface'],['circuitVolume','Circuit'],['ambienceVolume','Ambience']].map(([key,label])=>`<div class="set-row"><div class="k">${label}</div><div class="ctl"><input type="range" data-volume="${key}" min="0" max="1" step="0.05" value="${s[key]}"><span class="set-val">${Math.round(s[key]*100)}%</span></div></div>`).join('')}
           </div>
 
           <div class="panel-section">
@@ -180,6 +182,9 @@
 
       const mute = layer.querySelector('#s-mute');
       mute.addEventListener('change', () => { s.muted = mute.checked; save(); apply(); });
+
+      layer.querySelectorAll('[data-setting]').forEach((input)=>input.addEventListener('change',()=>{s[input.dataset.setting]=input.checked;save();apply();MUNDA.audio.click()}));
+      layer.querySelectorAll('[data-volume]').forEach((input)=>input.addEventListener('input',()=>{s[input.dataset.volume]=parseFloat(input.value);input.nextElementSibling.textContent=Math.round(input.value*100)+'%';save();apply()}));
 
       const vol = layer.querySelector('#s-vol');
       const volV = layer.querySelector('#s-vol-v');

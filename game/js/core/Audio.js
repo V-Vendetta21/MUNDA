@@ -11,6 +11,7 @@
   const Audio = {
     ctx: null,
     master: null,
+    buses: null,
     ready: false,
 
     // must be called from a user gesture at least once
@@ -23,6 +24,9 @@
         this.master = this.ctx.createGain();
         this.master.gain.value = this.volume();
         this.master.connect(this.ctx.destination);
+        this.buses = {};
+        ['interface','circuit','ambience'].forEach((name) => { const g=this.ctx.createGain(); g.connect(this.master); this.buses[name]=g; });
+        this.setVolume();
         this.ready = true;
       } catch (e) { this.ready = false; }
     },
@@ -38,10 +42,15 @@
 
     setVolume() {
       if (this.master) this.master.gain.setTargetAtTime(this.volume(), this.ctx.currentTime, 0.02);
+      if (this.buses) {
+        this.buses.interface.gain.setTargetAtTime(MUNDA.state.settings.interfaceVolume ?? .72, this.ctx.currentTime, .02);
+        this.buses.circuit.gain.setTargetAtTime(MUNDA.state.settings.circuitVolume ?? .78, this.ctx.currentTime, .02);
+        this.buses.ambience.gain.setTargetAtTime(MUNDA.state.settings.ambienceVolume ?? .36, this.ctx.currentTime, .02);
+      }
     },
 
     // ---- low-level helpers ----
-    _tone(freq, t, dur, type, gain) {
+    _tone(freq, t, dur, type, gain, bus) {
       if (!this.ready) return;
       const c = this.ctx;
       const o = c.createOscillator();
@@ -51,11 +60,11 @@
       g.gain.setValueAtTime(0.0001, t);
       g.gain.exponentialRampToValueAtTime(Math.max(0.0001, gain), t + 0.012);
       g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-      o.connect(g); g.connect(this.master);
+      o.connect(g); g.connect((this.buses && this.buses[bus || 'interface']) || this.master);
       o.start(t); o.stop(t + dur + 0.02);
     },
 
-    _noise(t, dur, gain, freq) {
+    _noise(t, dur, gain, freq, bus) {
       if (!this.ready) return;
       const c = this.ctx;
       const len = Math.max(1, Math.floor(c.sampleRate * dur));
@@ -67,7 +76,7 @@
       const g = c.createGain();
       g.gain.setValueAtTime(gain, t);
       g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-      src.connect(bp); bp.connect(g); g.connect(this.master);
+      src.connect(bp); bp.connect(g); g.connect((this.buses && this.buses[bus || 'circuit']) || this.master);
       src.start(t);
     },
 
@@ -81,7 +90,7 @@
     click() { this._schedule((t) => this._tone(1150, t, 0.07, 'triangle', 0.22)); },
     hover() { this._schedule((t) => this._tone(760, t, 0.05, 'sine', 0.10)); },
     select() { this._schedule((t) => { this._tone(520, t, 0.09, 'sine', 0.16); this._tone(700, t + 0.03, 0.07, 'sine', 0.10); }); },
-    connect() { this._schedule((t) => { this._tone(660, t, 0.11, 'sine', 0.20); this._tone(990, t + 0.07, 0.16, 'sine', 0.18); }); },
+    connect() { this._schedule((t) => { this._noise(t,.045,.04,2600,'circuit'); this._tone(660, t, 0.11, 'sine', 0.20,'circuit'); this._tone(990, t + 0.07, 0.16, 'sine', 0.18,'circuit'); }); },
     disconnect() { this._schedule((t) => this._tone(330, t, 0.08, 'sine', 0.10)); },
     wrong() { this._schedule((t) => { this._tone(210, t, 0.18, 'square', 0.12); this._tone(150, t + 0.05, 0.22, 'square', 0.10); }); },
     fail() {
@@ -106,6 +115,11 @@
       });
     },
     spark() { this._schedule((t) => this._noise(t, 0.18, 0.16, 2600)); },
+    guide() { this._schedule((t)=>{this._noise(t,.05,.05,3100,'circuit');this._tone(820,t,.1,'sine',.1,'circuit')}); },
+    lock() { this._schedule((t)=>{this._tone(280,t,.08,'triangle',.08,'interface');this._tone(560,t+.04,.08,'sine',.1,'interface')}); },
+    repair() { this._schedule((t)=>{this._noise(t,.08,.06,2400,'circuit');[390,620,930].forEach((f,i)=>this._tone(f,t+i*.05,.16,'sine',.11,'circuit'))}); },
+    warning() { this._schedule((t)=>{this._tone(440,t,.11,'triangle',.1,'interface');this._tone(330,t+.12,.11,'triangle',.08,'interface')}); },
+    panic() { this._schedule((t)=>{this._tone(110,t,.5,'sine',.1,'ambience');this._noise(t,.2,.04,800,'ambience')}); },
     streak() { this._schedule((t) => this._tone(880, t, 0.08, 'sine', 0.14)); },
     back() { this._schedule((t) => this._tone(600, t, 0.08, 'triangle', 0.14)); },
   };

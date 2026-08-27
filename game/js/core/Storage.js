@@ -34,6 +34,9 @@
     const settings = Object.assign({}, D.settings, read(MUNDA.KEYS.SETTINGS, {}));
     const custom = Object.assign({}, D.custom, read(MUNDA.KEYS.CUSTOM, {}));
     const progress = Object.assign({}, D.progress, read(MUNDA.KEYS.PROGRESS, {}));
+    progress.tutorialsSeen = Object.assign({}, D.progress.tutorialsSeen, progress.tutorialsSeen || {});
+    progress.dailyResults = Object.assign({}, D.progress.dailyResults, progress.dailyResults || {});
+    progress.schemaVersion = 2;
     const sound = Object.assign({}, read(MUNDA.KEYS.SOUND, {}), {});
     return { settings, custom, progress, sound };
   }

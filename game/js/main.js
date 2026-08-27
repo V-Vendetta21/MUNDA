@@ -9,6 +9,7 @@
   const U = MUNDA;
 
   function boot() {
+    MUNDA.debug = new URLSearchParams(global.location.search).get('debug') === '1';
     // load persisted state
     MUNDA.state = MUNDA.storage.loadState();
 
@@ -63,7 +64,7 @@
       Game.onPointerUp(p.x, p.y);
     };
     canvas.addEventListener('pointerup', upHandler);
-    canvas.addEventListener('pointercancel', upHandler);
+    canvas.addEventListener('pointercancel', () => Game.cancelDrag());
     canvas.addEventListener('pointerleave', () => {
       if (!Game.drag) Game.onPointerUp(-9999, -9999);
     });
@@ -76,15 +77,19 @@
     // keyboard
     global.addEventListener('keydown', (e) => {
       const number = /^Digit([1-9])$/.exec(e.code) || /^Numpad([1-9])$/.exec(e.code);
-      if (number && Game.phase === 'playing') {
+      if (number && Game.machine && Game.machine.canInput()) {
         e.preventDefault();
         Game.selectByNumber(Number(number[1]));
         return;
       }
       if (e.key === 'Escape' || e.key.toLowerCase() === 'p') {
         if (Game.phase === 'paused') Game.pause(false);
-        else if (Game.phase === 'playing') Game.pause(true);
+        else if (Game.machine && Game.machine.canInput()) Game.pause(true);
       }
+    });
+    document.getElementById('camera-reset').addEventListener('click', () => {
+      document.querySelector('.board-frame').style.transform = '';
+      MUNDA.Screens.toast('VIEW RECENTERED', true);
     });
   }
 

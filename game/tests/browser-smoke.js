@@ -1,0 +1,71 @@
+/* Browser smoke QA. Run with Playwright available in NODE_PATH. */
+const { chromium } = require('playwright');
+const path = require('node:path');
+(async()=>{
+ const browser=await chromium.launch({headless:true});
+ const errors=[];
+ const page=await browser.newPage({viewport:{width:1440,height:900},deviceScaleFactor:1});
+ page.on('pageerror',e=>errors.push(String(e)));
+ page.on('console',m=>{if(m.type()==='error')errors.push(m.text())});
+ await page.goto('http://127.0.0.1:8123/game/?debug=1',{waitUntil:'networkidle'});
+ const modes=await page.locator('[data-nav="production"],[data-nav="endless"],[data-nav="panic"],[data-nav="daily"],[data-nav="training"]').count();
+ if(modes!==5)throw Error('Expected five playable modes');
+ await page.screenshot({path:path.join(process.env.LOCALAPPDATA,'Temp','munda-routing-menu.png'),fullPage:true});
+ await page.click('[data-nav="production"]');
+ await page.waitForTimeout(250);
+ if(!await page.locator('#game-root.on').count())throw Error('Production did not start');
+ const stageChecks=await page.evaluate(()=>{
+   const out=[];
+   for(const level of [1,8,10,12,19,22,27,32,38,43,47,50]){
+    MUNDA.game.level=level;MUNDA.game.startLevel();
+    out.push({level,valid:MUNDA.game.puzzle.validation.valid,mechanics:MUNDA.game.puzzle.mechanics.active});
+   }
+   MUNDA.game.level=1;MUNDA.game.startLevel();return out;
+ });
+ if(stageChecks.some(x=>!x.valid))throw Error('Invalid production board '+JSON.stringify(stageChecks));
+ const mechanicChecks=await page.evaluate(()=>{
+   const G=MUNDA.game, R=MUNDA.BoardRenderer, out={};
+   G.level=12;G.startLevel();const next=G.puzzle.sequence[0];G.attempt(next,next,R.defaultRoute(next));out.sequence=G.connected===1;
+   G.level=15;G.startLevel();const y1=R.termPosRight(0).y;R.lastT+=1000;const y2=R.termPosRight(0).y;out.moving=Math.abs(y2-y1)>1;
+   G.level=22;G.startLevel();const locked=G.puzzle.left.find(t=>t.locked);G.unlock({wire:locked.wire,side:'left'});G.unlock({wire:locked.wire,side:'left'});out.lock=!locked.locked;
+   const damaged=G.puzzle.wires.find(w=>w.damaged);G.puzzle.sequence=null;G.attempt(damaged.index,damaged.index,R.defaultRoute(damaged.index));const repaired=damaged.repaired&&!damaged.connected;G.attempt(damaged.index,damaged.index,R.defaultRoute(damaged.index));out.damaged=repaired&&damaged.connected;
+   G.level=32;G.startLevel();G.puzzle.sequence=null;const split=G.puzzle.wires[0];G.attempt(0,0,R.defaultRoute(0));G.attempt(0,0,R.defaultRoute(0));const junction=split.branchReady&&!split.connected;G.attempt(0,0,R.defaultRoute(0));out.split=junction&&split.connected;
+   G.level=38;G.startLevel();G.puzzle.sequence=null;G.attempt(2,2,R.defaultRoute(2));const held=!G.puzzle.wires[2].connected;for(let i=0;i<3;i++)G.attempt(0,0,R.defaultRoute(0));out.power=held&&G.puzzle.wires[0].connected;
+   G.level=43;G.startLevel();R.revealDestination(0,1000);out.hidden=G.puzzle.hidden&&R.reveal.wire===0&&G.puzzle.decoys[0].clue==='NO INDEX';
+   return out;
+ });
+ if(Object.values(mechanicChecks).some(v=>!v))throw Error('Mechanic integration failed '+JSON.stringify(mechanicChecks));
+ await page.evaluate(()=>{MUNDA.game.level=1;MUNDA.game.startLevel()});
+ const before=await page.evaluate(()=>MUNDA.game.mistakes);
+ const box=await page.locator('#wires').boundingBox();
+ const start=await page.evaluate(()=>MUNDA.BoardRenderer.termPos(0,'left'));
+ await page.mouse.move(box.x+start.x,box.y+start.y);await page.mouse.down();await page.mouse.move(box.x+start.x+90,box.y+start.y+110,{steps:8});await page.mouse.up();
+ const afterEmpty=await page.evaluate(()=>MUNDA.game.mistakes);
+ if(afterEmpty!==before)throw Error('Empty release was punished');
+ const pos=await page.evaluate(()=>({a:MUNDA.BoardRenderer.termPos(0,'left'),b:MUNDA.BoardRenderer.termPosRight(0)}));
+ await page.mouse.click(box.x+pos.a.x,box.y+pos.a.y);await page.mouse.click(box.x+pos.b.x,box.y+pos.b.y);await page.waitForTimeout(120);
+ if(await page.evaluate(()=>MUNDA.game.connected)!==1)throw Error('Tap-to-connect failed');
+ await page.evaluate(()=>{MUNDA.game.level=12;MUNDA.game.startLevel()});await page.waitForTimeout(150);
+ await page.screenshot({path:path.join(process.env.LOCALAPPDATA,'Temp','munda-routing-stage12.png'),fullPage:true});
+ await page.evaluate(()=>MUNDA.Screens.exitToMenu());await page.click('[data-nav="panic"]');
+ if(!await page.locator('[data-panic="1"]').count())throw Error('Panic tiers unavailable');
+ await page.click('[data-panic="1"]');await page.waitForTimeout(150);
+ if(await page.evaluate(()=>MUNDA.game.mode)!=='panic')throw Error('Panic did not start');
+ await page.screenshot({path:path.join(process.env.LOCALAPPDATA,'Temp','munda-panic.png'),fullPage:true});
+ const dailyA=await page.evaluate(()=>MUNDA.Daily.create(new Date()));
+ await page.reload({waitUntil:'networkidle'});const dailyB=await page.evaluate(()=>MUNDA.Daily.create(new Date()));
+ if(JSON.stringify(dailyA)!==JSON.stringify(dailyB))throw Error('Daily not deterministic');
+ await page.setViewportSize({width:390,height:844});await page.click('[data-nav="training"]');await page.click('[data-training="guides"]');await page.waitForTimeout(150);
+ const fit=await page.evaluate(()=>({w:document.documentElement.scrollWidth,v:innerWidth,h:document.documentElement.scrollHeight,vh:innerHeight,valid:MUNDA.game.puzzle.validation.valid}));
+ if(fit.w>fit.v+2||!fit.valid)throw Error('Mobile overflow/invalid '+JSON.stringify(fit));
+ const input=await page.evaluate(()=>({touchAction:getComputedStyle(document.getElementById('wires')).touchAction,hitDiameter:MUNDA.BoardRenderer.radius()*3.1}));
+ if(input.touchAction!=='none'||input.hitDiameter<44)throw Error('Mobile input targets '+JSON.stringify(input));
+ await page.screenshot({path:path.join(process.env.LOCALAPPDATA,'Temp','munda-routing-mobile.png'),fullPage:true});
+ await page.setViewportSize({width:844,height:390});await page.waitForTimeout(100);
+ const landscape=await page.evaluate(()=>({w:document.documentElement.scrollWidth,v:innerWidth,h:document.documentElement.scrollHeight,vh:innerHeight}));
+ if(landscape.w>landscape.v+2||landscape.h>landscape.vh+2)throw Error('Landscape overflow '+JSON.stringify(landscape));
+ await page.keyboard.press('Escape');if(!await page.locator('#pause-overlay.active').count())throw Error('Escape pause failed');await page.keyboard.press('Escape');
+ if(errors.length)throw Error('Browser errors: '+errors.join(' | '));
+ console.log(JSON.stringify({ok:true,modes,stageChecks,mechanicChecks,fit,input,landscape,screenshots:4}));
+ await browser.close();
+})().catch(e=>{console.error(e.stack||e);process.exit(1)});

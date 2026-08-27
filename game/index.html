@@ -21,21 +21,31 @@
       </div>
       <div class="brand-tag">PRECISION LED TEXTILE ASSEMBLY</div>
     </div>
-    <nav class="menu-nav">
+    <div class="menu-profile"><span id="menu-rank">TRAINEE</span><span id="menu-progress">STAGE 01 · ROUTING 0%</span></div>
+    <nav class="menu-nav" aria-label="Game modes">
       <button class="btn btn--primary" data-nav="production">
-        <span class="btn-ico">▤</span><span>PRODUCTION SHIFT</span>
+        <span class="btn-ico">PS</span><span><b>PRODUCTION SHIFT</b><small>Progress through increasingly complex assemblies.</small></span>
       </button>
       <button class="btn" data-nav="endless">
-        <span class="btn-ico">∞</span><span>ENDLESS MODE</span>
+        <span class="btn-ico">∞</span><span><b>ENDLESS</b><small>Procedural precision routing with difficulty budgets.</small></span>
+      </button>
+      <button class="btn" data-nav="panic">
+        <span class="btn-ico">P!</span><span><b>PANIC MODE</b><small>Timed emergency repair tiers.</small></span>
+      </button>
+      <button class="btn" data-nav="daily">
+        <span class="btn-ico">24</span><span><b>DAILY ASSEMBLY</b><small>One deterministic local challenge each day.</small></span>
+      </button>
+      <button class="btn" data-nav="training">
+        <span class="btn-ico">TR</span><span><b>TRAINING</b><small>Practice individual routing mechanics.</small></span>
       </button>
       <button class="btn" data-nav="customization">
-        <span class="btn-ico">◉</span><span>CUSTOMIZATION</span>
+        <span class="btn-ico">CM</span><span><b>CUSTOMIZATION</b></span>
       </button>
       <button class="btn" data-nav="help">
-        <span class="btn-ico">?</span><span>HOW TO PLAY</span>
+        <span class="btn-ico">?</span><span><b>HOW TO PLAY</b></span>
       </button>
       <button class="btn" data-nav="settings">
-        <span class="btn-ico">⚙</span><span>SETTINGS</span>
+        <span class="btn-ico">ST</span><span><b>SETTINGS</b></span>
       </button>
     </nav>
     <div class="menu-footer">
@@ -54,6 +64,8 @@
         <div class="hud-score-top">SCORE <span id="hud-score">0</span></div>
         <div class="hud-streak" id="hud-streak">STREAK ×1</div>
       </div>
+      <div class="hud-cell hud-routing"><span>ROUTING</span><b id="hud-routing">100%</b></div>
+      <div class="hud-cell hud-timer" id="hud-timer" hidden><span>WINDOW</span><b>--</b></div>
       <button class="hud-btn" id="hud-pause" title="Pause">❚❚</button>
     </header>
 
@@ -68,6 +80,8 @@
       <div class="board-frame">
         <div class="board-corners" aria-hidden="true"></div>
         <canvas id="wires" class="wires-canvas"></canvas>
+        <div class="mechanic-strip" id="mechanic-strip" aria-live="polite"></div>
+        <button class="camera-reset" id="camera-reset" type="button" hidden>RESET VIEW</button>
         <div class="board-hint" id="board-hint">SELECT A TERMINAL</div>
         <div class="board-shortcuts" aria-hidden="true"><kbd>1–9</kbd> SELECT SOURCE <span>·</span> DRAG TO MATCH</div>
       </div>
@@ -88,14 +102,23 @@
   <div id="modal-layer" class="modal-layer"></div>
 
   <div id="toast" class="toast"></div>
+  <div id="tutorial-tip" class="tutorial-tip" hidden></div>
+  <pre id="debug-overlay" class="debug-overlay" hidden></pre>
 </div>
 
 <script src="js/core/Config.js"></script>
 <script src="js/core/Utils.js"></script>
+<script src="js/core/StateMachine.js"></script>
+<script src="js/core/CablePhysics.js"></script>
 <script src="js/core/Palette.js"></script>
 <script src="js/core/Storage.js"></script>
 <script src="js/core/Audio.js"></script>
 <script src="js/game/Difficulty.js"></script>
+<script src="js/game/MechanicManager.js"></script>
+<script src="js/game/RoutingSystem.js"></script>
+<script src="js/game/PuzzleValidator.js"></script>
+<script src="js/game/DailyChallenge.js"></script>
+<script src="js/game/Scoring.js"></script>
 <script src="js/game/PuzzleGen.js"></script>
 <script src="js/game/Game.js"></script>
 <script src="js/render/BoardRenderer.js"></script>

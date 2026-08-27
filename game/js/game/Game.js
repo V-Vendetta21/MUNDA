@@ -1,320 +1,48 @@
-/* ============================================================
-   MUNDA — Game.js
-   Core game state & rules: modes, levels, scoring, streaks,
-   connection resolution, completion, and failure/reset.
-   ============================================================ */
-(function (global) {
-  'use strict';
-  const MUNDA = global.MUNDA;
-  const U = MUNDA;
-
-  const Game = {
-    mode: null,          // 'production' | 'endless'
-    level: 1,
-    score: 0,
-    streak: 0,
-    multiplier: 1,
-    connected: 0,
-    correctConnections: 0,
-    mistakes: 0,
-    startTime: 0,
-    puzzle: null,
-    params: null,
-    phase: 'idle',       // idle | playing | complete | failed | paused
-
-    selection: null,     // armed {wire, side}
-    drag: null,          // active drag {wire, side, moved, lastX, lastY}
-
-    // ---- mode / level lifecycle ----
-    startMode(mode) {
-      this.mode = mode;
-      this.level = 1;
-      this.score = 0;
-      this.streak = 0;
-      this.multiplier = 1;
-      this.correctConnections = 0;
-      this.mistakes = 0;
-      MUNDA.Screens.enterGame(mode);
-      this.startLevel();
-    },
-
-    startLevel() {
-      this.params = MUNDA.difficulty.getParams(this.level, this.mode);
-      const wires = MUNDA.resolveWires();
-      this.puzzle = MUNDA.puzzleGen.generate(this.params, wires);
-      this.connected = 0;
-      this.phase = 'playing';
-      this.selection = null;
-      this.drag = null;
-      this.startTime = performance.now();
-
-      MUNDA.BoardRenderer.setPuzzle(this.puzzle, this.level);
-      MUNDA.StripRenderer.reset();
-      MUNDA.Screens.updateHud(this);
-      MUNDA.Screens.setHint('SELECT A TERMINAL');
-    },
-
-    get multiplierLabel() {
-      return '×' + this.multiplier.toFixed(2).replace(/\.?0+$/, '');
-    },
-
-    // ---- interaction resolution ----
-    hitTest(x, y) {
-      return MUNDA.BoardRenderer.hitTest(x, y);
-    },
-
-    onPointerDown(x, y) {
-      if (this.phase !== 'playing') return;
-      const hit = this.hitTest(x, y);
-      if (!hit) return;
-      if (this.puzzle.wires[hit.wire].connected) return;
-      const priorSelection = this.selection;
-      this.selection = { wire: hit.wire, side: hit.side };
-      MUNDA.BoardRenderer.setSelection(this.selection);
-      this.drag = { wire: hit.wire, side: hit.side, moved: false, x, y, priorSelection };
-      MUNDA.BoardRenderer.setDrag(this.drag);
-      MUNDA.Screens.setHint('DRAG TO THE MATCHING POST');
-      MUNDA.audio.select();
-    },
-
-    onPointerMove(x, y) {
-      if (this.phase !== 'playing') return;
-      // hover highlight for non-drag
-      if (!this.drag) {
-        MUNDA.BoardRenderer.setHover(x, y);
-        return;
-      }
-      const dx = x - this.drag.x, dy = y - this.drag.y;
-      if (Math.hypot(dx, dy) > 6) this.drag.moved = true;
-      const fromX = Number.isFinite(this.drag.lastX) ? this.drag.lastX : this.drag.x;
-      const fromY = Number.isFinite(this.drag.lastY) ? this.drag.lastY : this.drag.y;
-      const virus = MUNDA.BoardRenderer.hitTestVirusSegment(fromX, fromY, x, y);
-      this.drag.lastX = x; this.drag.lastY = y;
-      MUNDA.BoardRenderer.setDrag(this.drag);
-      if (virus) this.virusFailure(virus);
-    },
-
-    onPointerUp(x, y) {
-      if (this.phase !== 'playing') { this.drag = null; MUNDA.BoardRenderer.setDrag(null); return; }
-      const src = this.drag;
-      if (!src) return;
-      this.drag = null;
-      MUNDA.BoardRenderer.setDrag(null);
-      MUNDA.BoardRenderer.setHover(-1, -1);
-
-      const hit = this.hitTest(x, y);
-
-      if (src.moved) {
-        // dragged: connect if released on a terminal, else cancel (no penalty)
-        if (hit && hit.side !== src.side) this.attempt(src.wire, hit.wire);
-        else this.clearSelection();
-        return;
-      }
-
-      // plain click (tap): use armed selection logic
-      const prior = src.priorSelection;
-      if (!prior) {
-        MUNDA.Screens.setHint('SOURCE SELECTED — CHOOSE A RIGHT POST');
-        return;
-      }
-      if (prior.wire === src.wire && prior.side === src.side) {
-        this.clearSelection();           // tap same terminal again → deselect
-        return;
-      }
-      if (prior.side === src.side) {
-        MUNDA.Screens.setHint('SOURCE UPDATED — CHOOSE A RIGHT POST');
-        return;
-      }
-      // opposite rail → attempt
-      this.attempt(prior.wire, src.wire);
-    },
-
-    selectByNumber(number) {
-      if (this.phase !== 'playing' || !this.puzzle) return false;
-      const index = this.puzzle.wires.findIndex((wire) => wire.label === number && !wire.connected);
-      if (index < 0) return false;
-      this.selection = { wire: index, side: 'left' };
-      MUNDA.BoardRenderer.setSelection(this.selection);
-      const wire = this.puzzle.wires[index];
-      MUNDA.Screens.setHint(`${number} · ${wire.name.toUpperCase()} SELECTED — CHOOSE A RIGHT POST`);
-      MUNDA.audio.select();
-      return true;
-    },
-
-    attempt(fromWire, toWire) {
-      if (fromWire === toWire) {
-        this.connectWire(fromWire);
-      } else {
-        this.failure(fromWire, toWire);
-      }
-    },
-
-    connectWire(index) {
-      const w = this.puzzle.wires[index];
-      if (!w || w.connected) return;
-      w.connected = true;
-      this.connected++;
-      this.correctConnections++;
-
-      const base = 100;
-      const gained = Math.round(base * this.multiplier);
-      this.score += gained;
-
-      MUNDA.audio.connect();
-      MUNDA.BoardRenderer.animateConnect(index);
-      MUNDA.StripRenderer.brighten(this.connected, this.puzzle.count);
-      MUNDA.Screens.toast(`CONNECTION ${this.connected}/${this.puzzle.count}  +${U.fmt(gained)}`, true);
-      MUNDA.Screens.updateHud(this);
-      this.clearSelection();
-
-      if (this.connected === this.puzzle.count) {
-        setTimeout(() => this.completeLevel(), 420);
-      }
-    },
-
-    updateMultiplier() {
-      // streak counts consecutive levels completed; multiplier scales from it
-      this.multiplier = 1 + Math.min(10, this.streak) * 0.25;
-    },
-
-    clearSelection() {
-      this.selection = null;
-      MUNDA.BoardRenderer.setSelection(null);
-      if (this.phase === 'playing') MUNDA.Screens.setHint('SELECT A TERMINAL');
-    },
-
-    completeLevel() {
-      if (this.phase !== 'playing') return;
-      this.phase = 'complete';
-
-      const elapsed = (performance.now() - this.startTime) / 1000;
-      const params = this.params;
-
-      // level completion bonus
-      const levelBonus = 500;
-      // perfect bonus (reaching completion means zero errors)
-      const perfectBonus = 250;
-      // speed bonus — scaled, never negative
-      const speedBonus = Math.round(Math.max(0, (params.idealSeconds - elapsed) * 14));
-
-      let total = levelBonus + perfectBonus + speedBonus;
-      this.score += total;
-      this.streak = this.streak + 1;
-      this.updateMultiplier();
-
-      // progress tracking
-      const p = MUNDA.state.progress;
-      if (this.mode === 'production') {
-        p.highestLevel = Math.max(p.highestLevel, this.level);
-        p.bestScore = Math.max(p.bestScore, this.score);
-        p.runsCompleted++;
-      } else {
-        p.endlessBest = Math.max(p.endlessBest, this.score);
-        p.endlessLongest = Math.max(p.endlessLongest, this.level);
-        p.runsCompleted++;
-      }
-      p.totalConnections += this.puzzle.count;
-      MUNDA.storage.saveProgress(p);
-
-      MUNDA.audio.complete();
-      MUNDA.BoardRenderer.completeAnimation(() => {
-        if (this.phase !== 'complete') return;   // guard: user may have navigated away
-        MUNDA.StripRenderer.illuminate(true);
-        MUNDA.Screens.showQC({
-          mode: this.mode,
-          level: this.level,
-          connections: `${this.connected}/${this.puzzle.count}`,
-          errors: 0,
-          score: this.score,
-          levelBonus, perfectBonus, speedBonus,
-          streak: this.streak,
-          multiplier: this.multiplier,
-          elapsed,
-        });
-      });
-    },
-
-    nextLevel() {
-      this.level++;
-      this.startLevel();
-      MUNDA.audio.click();
-    },
-
-    // ---- failure ----
-    failure(fromWire, toWire) {
-      if (this.phase !== 'playing') return;
-      this.phase = 'failed';
-      this.mistakes++;
-      MUNDA.state.progress.totalMistakes++;
-      MUNDA.storage.saveProgress(MUNDA.state.progress);
-
-      // mark the two terminals as the error
-      MUNDA.BoardRenderer.failureSequence(fromWire, toWire, () => {
-        if (this.phase !== 'failed') return;      // guard: user may have navigated away
-        MUNDA.StripRenderer.illuminate(false);
-        MUNDA.audio.fail();
-        MUNDA.Screens.showFailure({
-          mode: this.mode,
-          level: this.level,
-          score: this.score,
-          streak: this.streak,
-          mistakes: this.mistakes,
-          best: this.mode === 'production' ? MUNDA.state.progress.bestScore : MUNDA.state.progress.endlessBest,
-        });
-      });
-    },
-
-    virusFailure(hazard) {
-      if (this.phase !== 'playing') return;
-      this.phase = 'failed';
-      this.mistakes++;
-      MUNDA.state.progress.totalMistakes++;
-      MUNDA.storage.saveProgress(MUNDA.state.progress);
-      this.drag = null;
-      this.selection = null;
-      MUNDA.BoardRenderer.setDrag(null);
-      MUNDA.BoardRenderer.setSelection(null);
-      MUNDA.Screens.setHint('BIO-CONTAMINATION DETECTED', true);
-      MUNDA.BoardRenderer.virusFailureSequence(hazard, () => {
-        if (this.phase !== 'failed') return;
-        MUNDA.StripRenderer.illuminate(false);
-        MUNDA.audio.fail();
-        MUNDA.Screens.showFailure({
-          mode: this.mode,
-          level: this.level,
-          score: this.score,
-          streak: this.streak,
-          mistakes: this.mistakes,
-          reason: 'virus',
-          best: this.mode === 'production' ? MUNDA.state.progress.bestScore : MUNDA.state.progress.endlessBest,
-        });
-      });
-    },
-
-    // retry after failure
-    restartRun() {
-      this.score = 0;
-      this.streak = 0;
-      this.multiplier = 1;
-      this.level = 1;
-      this.correctConnections = 0;
-      this.startLevel();
-      MUNDA.Screens.hideModal();
-      MUNDA.audio.click();
-    },
-
-    pause(toggle) {
-      if (this.phase === 'complete' || this.phase === 'failed') return;
-      if (toggle) {
-        this.phase = 'paused';
-        MUNDA.Screens.showPause();
-      } else {
-        this.phase = 'playing';
-        MUNDA.Screens.hidePause();
-      }
-    },
-  };
-
-  MUNDA.game = Game;
-
-})(typeof window !== 'undefined' ? window : this);
+/* MUNDA — integrated precision-routing game controller */
+(function(global){'use strict';const M=global.MUNDA,U=M;
+ const Game={
+  mode:null,level:1,score:0,streak:0,multiplier:1,connected:0,correctConnections:0,mistakes:0,startTime:0,puzzle:null,params:null,phase:'idle',selection:null,drag:null,machine:null,sequenceErrors:0,routeScores:[],deadline:0,training:null,seed:0,lastTick:0,
+  startMode(mode,options){options=options||{};this.mode=mode;this.training=options.training||null;this.level=options.level||1;this.score=0;this.streak=0;this.multiplier=1;this.correctConnections=0;this.mistakes=0;this.machine=M.StateMachine.create('MENU');this.machine.transition('PLAYING');M.Screens.enterGame(mode);this.startLevel()},
+  startLevel(){
+   const daily=this.mode==='daily'?M.Daily.create(new Date()):null;if(daily)this.level=daily.level;this.seed=daily?daily.seed:(this.mode==='endless'?Math.floor(Math.random()*2147483647):(this.level*7919+(this.mode||'production').length*101));
+   this.params=M.difficulty.getParams(this.level,this.mode);this.params.seed=this.seed;this.params.training=this.training;this.params.mechanics=M.Mechanics.forStage(this.level,this.mode,this.seed,this.training);
+   this.puzzle=M.puzzleGen.generate(this.params,M.resolveWires());this.connected=0;this.sequenceErrors=0;this.routeScores=[];this.stagePanic=this.mode==='panic'||this.puzzle.mechanics.active.includes('panic');this.phase=this.stagePanic?'panic':'playing';this.machine.force(this.stagePanic?'PANIC':'PLAYING');this.selection=null;this.drag=null;this.startTime=performance.now();this.deadline=this.puzzle.timerSeconds?this.startTime+this.puzzle.timerSeconds*1000:0;
+   M.BoardRenderer.setPuzzle(this.puzzle,this.level);M.StripRenderer.setPuzzle(this.puzzle.count);M.Screens.setStripStatus('INTEGRATION');M.Screens.updateHud(this);M.Screens.setMechanics(this.puzzle);M.Screens.setHint(this.puzzle.sequence?'SEQUENCE · '+this.puzzle.sequence.map(i=>String(i+1).padStart(2,'0')).join(' → '):'SELECT A TERMINAL');M.Screens.showTutorialFor(this.puzzle);document.body.classList.toggle('panic-mode',this.stagePanic);document.body.classList.toggle('blackout-mode',!!this.puzzle.blackout);document.body.classList.toggle('clean-room-mode',(this.puzzle.mechanics.modifiers||[]).includes('CLEAN ROOM'));
+  },
+  get multiplierLabel(){return'×'+this.multiplier.toFixed(2).replace(/\.?0+$/,'')},
+  canInput(){return this.machine?this.machine.canInput():this.phase==='playing'||this.phase==='panic'},
+  hitTest(x,y){return M.BoardRenderer.hitTest(x,y)},
+  terminal(hit){return hit.side==='left'?this.puzzle.left.find(t=>t.wire===hit.wire):this.puzzle.right.find(t=>t.wire===hit.wire)},
+  unlock(hit){const term=this.terminal(hit);if(!term||!term.locked)return true;if(!term.calibration){term.calibration=1;M.Screens.setHint('CALIBRATION STARTED · TAP AGAIN TO ALIGN');M.audio.lock?.();return false}term.locked=false;term.calibration=2;M.Screens.toast('TERMINAL '+String(hit.wire+1).padStart(2,'0')+' · CALIBRATED',true);M.audio.guide?.();this.haptic(8);return false},
+  onPointerDown(x,y){if(!this.machine?.canInput())return;const hit=this.hitTest(x,y);if(!hit)return;if(!this.unlock(hit))return;if(this.puzzle.wires[hit.wire].connected)return;const priorSelection=this.selection;this.selection={wire:hit.wire,side:hit.side};M.BoardRenderer.setSelection(this.selection);this.drag={wire:hit.wire,side:hit.side,moved:false,x,y,lastX:x,lastY:y,priorSelection,route:[{x,y}]};M.BoardRenderer.setDrag(this.drag);if(this.puzzle.hidden)M.BoardRenderer.revealDestination(hit.wire,1100);M.Screens.setHint('ROUTE THE CABLE · AVOID BLOCKED ZONES');M.audio.select()},
+  onPointerMove(x,y){if(!this.canInput())return;if(!this.drag){M.BoardRenderer.setHover(x,y);return}const dx=x-this.drag.x,dy=y-this.drag.y;if(Math.hypot(dx,dy)>6)this.drag.moved=true;const route=this.drag.route||(this.drag.route=[]),last=route.at(-1);if(!last||Math.hypot(x-last.x,y-last.y)>7)route.push({x,y});const virus=M.BoardRenderer.hitTestVirusSegment(this.drag.lastX,this.drag.lastY,x,y);this.drag.lastX=x;this.drag.lastY=y;M.BoardRenderer.setDrag(this.drag);if(virus)this.virusFailure(virus)},
+  cancelDrag(){this.drag=null;M.BoardRenderer.setDrag(null);M.BoardRenderer.setHover(-1,-1);M.Screens.setHint(this.selection?'SOURCE SELECTED · CHOOSE ITS MATCH':'SELECT A TERMINAL')},
+  onPointerUp(x,y){if(!this.machine?.canInput()){this.drag=null;M.BoardRenderer.setDrag(null);return}const src=this.drag;if(!src)return;src.route.push({x,y});this.drag=null;M.BoardRenderer.setDrag(null);M.BoardRenderer.setHover(-1,-1);const hit=this.hitTest(x,y);
+   if(src.moved){if(hit&&hit.side!==src.side){const route=M.BoardRenderer.normalizeRoute(src.route,src.wire,src.side,hit.side);if(M.Routing.routeBlocked(route,this.pixelObstacles(),6)){M.Screens.setHint('ROUTE BLOCKED · GUIDE CABLE AROUND THE HOUSING',true);M.audio.warning?.();return}if(!this.requiredGuidesMet(src.wire,route)){M.Screens.setHint('REQUIRED HARNESS GUIDE MISSED · TRY AGAIN',true);M.audio.warning?.();return}this.attempt(src.wire,hit.wire,route)}else this.clearSelection();return}
+   const prior=src.priorSelection;if(!prior){M.Screens.setHint('SOURCE SELECTED · CHOOSE ITS MATCH');return}if(prior.wire===src.wire&&prior.side===src.side){this.clearSelection();return}if(prior.side===src.side){M.Screens.setHint('SOURCE UPDATED · CHOOSE OPPOSITE POST');return}const route=M.BoardRenderer.defaultRoute(prior.wire);this.attempt(prior.wire,src.wire,route)
+  },
+  pixelObstacles(){return(this.puzzle.obstacles||[]).map(o=>({x:o.x*M.BoardRenderer.cssW,y:o.y*M.BoardRenderer.cssH,w:o.w*M.BoardRenderer.cssW,h:o.h*M.BoardRenderer.cssH}))},
+  requiredGuidesMet(wire,route){const required=(this.puzzle.guides||[]).filter(g=>g.required&&g.wire===wire);return required.every(g=>route.some(p=>Math.hypot(p.x-g.x*M.BoardRenderer.cssW,p.y-g.y*M.BoardRenderer.cssH)<30))},
+  selectByNumber(number){if(!this.machine?.canInput()||!this.puzzle)return false;const index=this.puzzle.wires.findIndex(w=>w.label===number&&!w.connected);if(index<0)return false;this.selection={wire:index,side:'left'};M.BoardRenderer.setSelection(this.selection);if(this.puzzle.hidden)M.BoardRenderer.revealDestination(index,1100);M.Screens.setHint(String(number).padStart(2,'0')+' · '+this.puzzle.wires[index].name.toUpperCase()+' · '+this.puzzle.wires[index].pattern.toUpperCase());M.audio.select();return true},
+  attempt(from,to,route){if(from!==to){this.failure(from,to,'mismatch');return}if(this.puzzle.sequence&&this.puzzle.sequence[this.puzzle.sequenceCursor]!==from){this.sequenceErrors++;if(this.mode==='production'&&this.level>=16)return this.failure(from,to,'sequence');this.score=Math.max(0,this.score-75);this.streak=0;M.Screens.toast('SEQUENCE HOLD · NEXT '+String(this.puzzle.sequence[this.puzzle.sequenceCursor]+1).padStart(2,'0'),false);this.clearSelection();return}
+   if(this.puzzle.power&&this.puzzle.power.order.includes(from)){const expected=this.puzzle.power.order.find(i=>!this.puzzle.wires[i]?.connected);if(expected!==from){M.Screens.setHint('POWER LIMIT · ROUTE CIRCUIT '+String(expected+1).padStart(2,'0')+' FIRST',true);this.clearSelection();return}}
+   if((this.puzzle.mechanics.modifiers||[]).includes('ZERO CROSS')){const existing=this.puzzle.wires.filter(w=>w.route).map(w=>w.route.map(p=>({x:p.x*M.BoardRenderer.cssW,y:p.y*M.BoardRenderer.cssH})));if(M.Routing.countCrossings(existing.concat([route||M.BoardRenderer.defaultRoute(from)]))>0){M.Screens.setHint('ZERO CROSS · INTERSECTION REJECTED WITHOUT PENALTY',true);M.audio.warning?.();this.clearSelection();return}}
+   const w=this.puzzle.wires[from];if(w.damaged&&!w.repaired){w.repaired=true;M.BoardRenderer.repairPulse(from);M.Screens.toast('CONTINUITY RESTORED · COMPLETE FINAL ROUTE',true);M.audio.repair?.();this.haptic(10);this.clearSelection();return}
+   if(w.branches>1&&!w.branchReady){w.branchReady=true;M.BoardRenderer.setBranchReady(from);M.Screens.toast('JUNCTION LOCKED · ROUTE SECOND BRANCH',true);M.audio.guide?.();this.clearSelection();return}
+   this.connectWire(from,route)
+  },
+  connectWire(index,route){const w=this.puzzle.wires[index];if(!w||w.connected)return;w.connected=true;w.route=(route||M.BoardRenderer.defaultRoute(index)).map(p=>({x:p.x/M.BoardRenderer.cssW,y:p.y/M.BoardRenderer.cssH}));this.connected++;this.correctConnections++;if(this.puzzle.sequence)this.puzzle.sequenceCursor++;const direct=Math.hypot((this.puzzle.railX2frac-this.puzzle.railXfrac)*M.BoardRenderer.cssW,(w.rightYfrac-w.leftYfrac)*M.BoardRenderer.cssH);const guides=(this.puzzle.guides||[]).filter(g=>g.wire===index);const used=guides.filter(g=>(route||[]).some(p=>Math.hypot(p.x-g.x*M.BoardRenderer.cssW,p.y-g.y*M.BoardRenderer.cssH)<30)).length;const metric=M.Routing.measure(route||M.BoardRenderer.defaultRoute(index),direct,{guidesUsed:used,optionalGuides:guides.filter(g=>g.optional).length});this.routeScores.push(metric.quality);const gained=Math.round((100+metric.quality)*this.multiplier);this.score+=gained;M.audio.connect();this.haptic(12);M.BoardRenderer.animateConnect(index);M.StripRenderer.brighten(this.connected,this.puzzle.count);M.Screens.setStripStatus(this.connected===this.puzzle.count?'FULL SYSTEM ACTIVE':this.connected+'/'+this.puzzle.count+' · '+Math.round(this.connected/this.puzzle.count*100)+'% ILLUMINATED',this.connected===this.puzzle.count?'ok':'');M.Screens.toast('CIRCUIT '+this.connected+'/'+this.puzzle.count+' · ROUTING '+metric.quality+'% · +'+U.fmt(gained),true);M.Screens.updateHud(this);this.clearSelection();if(this.puzzle.major){this.puzzle.major.phase=Math.min(5,1+Math.floor(this.connected/this.puzzle.count*5));M.Screens.setMechanics(this.puzzle)}if(this.connected===this.puzzle.count)setTimeout(()=>this.completeLevel(),480)},
+  haptic(pattern){if(M.state.settings.haptics&&global.navigator?.vibrate)global.navigator.vibrate(pattern)},
+  updateMultiplier(){this.multiplier=1+Math.min(10,this.streak)*.25},clearSelection(){this.selection=null;M.BoardRenderer.setSelection(null);if(this.machine?.canInput())M.Screens.setHint('SELECT A TERMINAL')},
+  tick(now){if(!this.machine?.canInput())return;this.lastTick=now;if(this.deadline){const remain=Math.max(0,(this.deadline-now)/1000);M.Screens.updateTimer(remain);if(remain<=0)this.failure(-1,-1,'timeout')}M.Screens.updateDebug(this)},
+  currentRouting(){return this.routeScores.length?Math.round(this.routeScores.reduce((a,b)=>a+b,0)/this.routeScores.length):100},
+  completeLevel(){if(!this.machine?.canInput())return;this.phase='complete';this.machine.force('SUCCESS');const elapsed=(performance.now()-this.startTime)/1000,routes=this.puzzle.wires.filter(w=>w.route).map(w=>w.route.map(p=>({x:p.x*M.BoardRenderer.cssW,y:p.y*M.BoardRenderer.cssH}))),crossings=M.Routing.countCrossings(routes),rating=M.Scoring.calculate({correct:this.puzzle.count,mistakes:this.mistakes,elapsed,idealSeconds:this.params.idealSeconds,routeQuality:this.currentRouting(),crossings,sequenceErrors:this.sequenceErrors});const levelBonus=500,perfectBonus=this.mistakes?0:250,speedBonus=Math.round(rating.speed*3),routingBonus=Math.round(rating.routing*4);this.score+=levelBonus+perfectBonus+speedBonus+routingBonus;this.streak++;this.updateMultiplier();this.persistResult(rating,elapsed);M.audio.complete();this.haptic([12,35,18]);M.BoardRenderer.completeAnimation(()=>{if(this.phase!=='complete')return;M.StripRenderer.illuminate(true);this.machine.force('RESULTS');M.Screens.showQC({mode:this.mode,level:this.level,connections:this.connected+'/'+this.puzzle.count,errors:this.mistakes,score:this.score,levelBonus,perfectBonus,speedBonus,routingBonus,streak:this.streak,multiplier:this.multiplier,elapsed,rating,crossings,major:!!this.puzzle.major})})},
+  persistResult(rating,elapsed){const p=M.state.progress;p.highestLevel=this.mode==='production'?Math.max(p.highestLevel,this.level):p.highestLevel;p.bestScore=this.mode==='production'?Math.max(p.bestScore,this.score):p.bestScore;p.endlessBest=this.mode==='endless'?Math.max(p.endlessBest,this.score):p.endlessBest;p.endlessLongest=this.mode==='endless'?Math.max(p.endlessLongest,this.level):p.endlessLongest;p.runsCompleted++;p.totalConnections+=this.puzzle.count;if(rating.precision===100)p.perfectBoards++;if(this.puzzle.major)p.majorCompleted++;p.ratedBoards=(p.ratedBoards||0)+1;p.averagePrecision=Math.round(((p.averagePrecision||0)*(p.ratedBoards-1)+rating.precision)/p.ratedBoards);p.averageRouting=Math.round(((p.averageRouting||0)*(p.ratedBoards-1)+rating.routing)/p.ratedBoards);p.rank=M.Scoring.rank(p);if(this.mode==='daily'){const key=M.Daily.seedFor(new Date());const old=p.dailyResults[key]||{};p.dailyResults[key]={completed:true,score:Math.max(old.score||0,this.score),grade:rating.grade,bestTime:old.bestTime?Math.min(old.bestTime,elapsed):elapsed}}M.storage.saveProgress(p)},
+  nextLevel(){this.level++;this.machine.force('TRANSITION');this.startLevel();M.audio.click()},
+  failure(a,b,reason){if(!this.machine?.canInput())return;this.phase='failed';this.machine.force('FAILURE');this.mistakes++;M.state.progress.totalMistakes++;M.storage.saveProgress(M.state.progress);const done=()=>{if(this.phase!=='failed')return;M.StripRenderer.illuminate(false);M.audio.fail();this.machine.force('RESULTS');M.Screens.showFailure({mode:this.mode,level:this.level,score:this.score,streak:this.streak,mistakes:this.mistakes,reason:reason||'mismatch',best:this.mode==='production'?M.state.progress.bestScore:M.state.progress.endlessBest})};if(a>=0)M.BoardRenderer.failureSequence(a,b,done);else setTimeout(done,180)},
+  virusFailure(h){if(!this.canInput())return;this.phase='failed';if(this.machine)this.machine.force('FAILURE');this.mistakes++;this.drag=null;this.selection=null;M.BoardRenderer.setDrag(null);M.BoardRenderer.setSelection(null);M.Screens.setHint('BIO-CONTAMINATION DETECTED',true);M.BoardRenderer.virusFailureSequence(h,()=>{M.StripRenderer.illuminate(false);M.audio.fail();if(this.machine)this.machine.force('RESULTS');M.Screens.showFailure({mode:this.mode,level:this.level,score:this.score,streak:this.streak,mistakes:this.mistakes,reason:'virus',best:M.state.progress.bestScore})})},
+  restartRun(){this.score=0;this.streak=0;this.multiplier=1;this.level=1;this.correctConnections=0;this.machine.force('TRANSITION');this.startLevel();M.Screens.hideModal();M.audio.click()},
+  pause(toggle){if(['complete','failed'].includes(this.phase))return;if(toggle){this.phase='paused';this.machine.force('PAUSED');M.Screens.showPause()}else{this.phase=this.stagePanic?'panic':'playing';this.machine.force(this.stagePanic?'PANIC':'PLAYING');M.Screens.hidePause();if(this.deadline)this.deadline=performance.now()+Math.max(1,this.puzzle.timerSeconds)*1000}}
+ };
+ M.game=Game;
+})(typeof window!=='undefined'?window:this);
