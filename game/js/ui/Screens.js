@@ -97,6 +97,7 @@
       this.els.gameRoot.classList.add('on');
       document.getElementById('board').style.display = 'block';
       MUNDA.BoardRenderer.init();
+      if (MUNDA.TraceRenderer && MUNDA.TraceRenderer.init) MUNDA.TraceRenderer.init();
       MUNDA.StripRenderer.init();
     },
 
@@ -108,6 +109,7 @@
       document.getElementById('board').style.display = 'none';
       MUNDA.game.phase = 'idle';
       if (MUNDA.game.machine) MUNDA.game.machine.force('MENU');
+      if (MUNDA.TraceRenderer && MUNDA.TraceRenderer.cancel) MUNDA.TraceRenderer.cancel();
       document.body.classList.remove('panic-mode','blackout-mode','clean-room-mode');
       this.els.tutorialTip.hidden = true;
       this.els.debugOverlay.hidden = true;
@@ -121,8 +123,8 @@
       this.els.hudScore.textContent = U.fmt(g.score);
       this.els.hudStreak.textContent = MUNDA.t('hud.streak', { n: g.streak }) + ' · ' + g.multiplierLabel;
       this.els.hudStreak.classList.toggle('zero', g.streak === 0);
-      this.els.hudConns.textContent = MUNDA.t('hud.conns.fmt', { a: g.connected, b: g.puzzle.count });
-      this.els.hudRouting.textContent = g.currentRouting() + '%';
+      this.els.hudConns.textContent = g.puzzle ? MUNDA.t('hud.conns.fmt', { a: g.connected, b: g.puzzle.count }) : '--';
+      this.els.hudRouting.textContent = g.puzzle ? g.currentRouting() + '%' : '--%';
       this.els.hudTimer.hidden = !g.deadline;
     },
 
@@ -307,7 +309,7 @@
     updateDebug: function (g) {
       if (!MUNDA.debug) return;
       const el=this.els.debugOverlay;el.hidden=false;
-      el.textContent=['STATE '+g.machine.state,'SEED '+g.seed,'STAGE '+g.level,'BUDGET '+g.params.mechanics.budget,'FPS '+Math.round(1000/Math.max(1,g.lastTick-(this._debugLast||g.lastTick-16))),'CROSSINGS '+MUNDA.Routing.countCrossings(g.puzzle.wires.filter(w=>w.route).map(w=>w.route)),'VALID '+g.puzzle.validation.valid,'OBSTACLES '+g.puzzle.obstacles.length].join('\n');
+      el.textContent=['STATE '+g.machine.state,'SEED '+g.seed,'STAGE '+g.level,'BUDGET '+(g.params&&g.params.mechanics?g.params.mechanics.budget:'-'),'TRACE '+(g.traceAccuracy||'--')+'%','CROSSINGS '+(g.puzzle?MUNDA.Routing.countCrossings(g.puzzle.wires.filter(w=>w.route).map(w=>w.route)):0),'VALID '+(g.puzzle?g.puzzle.validation.valid:'-'),'OBSTACLES '+(g.puzzle?g.puzzle.obstacles.length:0)].join('\n');
       this._debugLast=g.lastTick;
     },
 

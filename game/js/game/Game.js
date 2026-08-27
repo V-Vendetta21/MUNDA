@@ -6,8 +6,24 @@
   startLevel(){
    const daily=this.mode==='daily'?M.Daily.create(new Date()):null;if(daily)this.level=daily.level;this.seed=daily?daily.seed:(this.mode==='endless'?Math.floor(Math.random()*2147483647):(this.level*7919+(this.mode||'production').length*101));
    this.params=M.difficulty.getParams(this.level,this.mode);this.params.seed=this.seed;this.params.training=this.training;this.params.mechanics=M.Mechanics.forStage(this.level,this.mode,this.seed,this.training);
-   this.puzzle=M.puzzleGen.generate(this.params,M.resolveWires());this.connected=0;this.sequenceErrors=0;this.routeScores=[];this.stagePanic=this.mode==='panic'||this.puzzle.mechanics.active.includes('panic');this.phase=this.stagePanic?'panic':'playing';this.machine.force(this.stagePanic?'PANIC':'PLAYING');this.selection=null;this.drag=null;this.startTime=performance.now();this.deadline=this.puzzle.timerSeconds?this.startTime+this.puzzle.timerSeconds*1000:0;
-   M.BoardRenderer.setPuzzle(this.puzzle,this.level);M.StripRenderer.setPuzzle(this.puzzle.count);M.Screens.setStripStatus(M.t('strip.integration'));M.Screens.updateHud(this);M.Screens.setMechanics(this.puzzle);M.Screens.setHint(this.puzzle.sequence?'SEQUENCE · '+this.puzzle.sequence.map(i=>String(i+1).padStart(2,'0')).join(' → '):M.t('hint.select'));M.Screens.showTutorialFor(this.puzzle);document.body.classList.toggle('panic-mode',this.stagePanic);document.body.classList.toggle('blackout-mode',!!this.puzzle.blackout);document.body.classList.toggle('clean-room-mode',(this.puzzle.mechanics.modifiers||[]).includes('CLEAN ROOM'));
+   this.connected=0;this.sequenceErrors=0;this.routeScores=[];this.selection=null;this.drag=null;this.traceAccuracy=100;
+   this.beginTrace();
+  },
+  beginTrace(){
+   // Pre-assembly: print a random MUNDA circuit by tracing its dotted outline.
+   this.trace=M.CircuitTrace?M.CircuitTrace.generate(this.seed+this.level*31):null;
+   this.phase='trace';this.machine.force('TRACE');
+   // halt the stale board renderer so the trace owns the canvas
+   M.BoardRenderer.puzzle=null;M.BoardRenderer.selection=null;M.BoardRenderer.drag=null;
+   M.TraceRenderer.begin(this.trace,(acc)=>{this.traceAccuracy=acc;this.completeTrace(acc)});
+   M.Screens.updateHud(this);M.Screens.setHint(M.t('hint.trace'));
+  },
+  completeTrace(acc){
+   // Apply accuracy to difficulty: higher accuracy → easier board.
+   if(M.difficulty.applyTrace)this.params=M.difficulty.applyTrace(this.params,acc);
+   this.puzzle=M.puzzleGen.generate(this.params,M.resolveWires());this.sequenceErrors=0;this.routeScores=[];this.stagePanic=this.mode==='panic'||this.puzzle.mechanics.active.includes('panic');this.phase=this.stagePanic?'panic':'playing';this.machine.force(this.stagePanic?'PANIC':'PLAYING');this.selection=null;this.drag=null;this.startTime=performance.now();this.deadline=this.puzzle.timerSeconds?this.startTime+this.puzzle.timerSeconds*1000:0;
+   M.TraceRenderer.cancel();
+   M.BoardRenderer.setPuzzle(this.puzzle,this.level);M.StripRenderer.setPuzzle(this.puzzle.count);M.Screens.setStripStatus(M.t('strip.integration'));M.Screens.updateHud(this);M.Screens.setMechanics(this.puzzle);M.Screens.setHint(this.puzzle.sequence?'SEQUENCE · '+this.puzzle.sequence.map(i=>String(i+1).padStart(2,'0')).join(' → '):M.t('hint.select'));M.Screens.showTutorialFor(this.puzzle);document.body.classList.toggle('panic-mode',this.stagePanic);document.body.classList.toggle('blackout-mode',!!this.puzzle.blackout);document.body.classList.toggle('clean-room-mode',(this.puzzle.mechanics.modifiers||[]).includes('CLEAN ROOM'));M.Screens.toast(M.t('toast.trace',{n:acc}),true);
   },
   get multiplierLabel(){return'×'+this.multiplier.toFixed(2).replace(/\.?0+$/,'')},
   canInput(){return this.machine?this.machine.canInput():this.phase==='playing'||this.phase==='panic'},
@@ -42,7 +58,7 @@
   failure(a,b,reason){if(!this.machine?.canInput())return;this.phase='failed';this.machine.force('FAILURE');this.mistakes++;M.state.progress.totalMistakes++;M.storage.saveProgress(M.state.progress);const done=()=>{if(this.phase!=='failed')return;M.StripRenderer.illuminate(false);M.audio.fail();this.machine.force('RESULTS');M.Screens.showFailure({mode:this.mode,level:this.level,score:this.score,streak:this.streak,mistakes:this.mistakes,reason:reason||'mismatch',best:this.mode==='production'?M.state.progress.bestScore:M.state.progress.endlessBest})};if(a>=0)M.BoardRenderer.failureSequence(a,b,done);else setTimeout(done,180)},
   virusFailure(h){if(!this.canInput())return;this.phase='failed';if(this.machine)this.machine.force('FAILURE');this.mistakes++;this.drag=null;this.selection=null;M.BoardRenderer.setDrag(null);M.BoardRenderer.setSelection(null);M.Screens.setHint(M.t('hint.virus'),true);M.BoardRenderer.virusFailureSequence(h,()=>{M.StripRenderer.illuminate(false);M.audio.fail();if(this.machine)this.machine.force('RESULTS');M.Screens.showFailure({mode:this.mode,level:this.level,score:this.score,streak:this.streak,mistakes:this.mistakes,reason:'virus',best:M.state.progress.bestScore})})},
   restartRun(){this.score=0;this.streak=0;this.multiplier=1;this.level=1;this.correctConnections=0;this.machine.force('TRANSITION');this.startLevel();M.Screens.hideModal();M.audio.click()},
-  pause(toggle){if(['complete','failed'].includes(this.phase))return;if(toggle){this.phase='paused';this.machine.force('PAUSED');M.Screens.showPause()}else{this.phase=this.stagePanic?'panic':'playing';this.machine.force(this.stagePanic?'PANIC':'PLAYING');M.Screens.hidePause();if(this.deadline)this.deadline=performance.now()+Math.max(1,this.puzzle.timerSeconds)*1000}}
+  pause(toggle){if(['complete','failed'].includes(this.phase))return;if(toggle){this.prePausePhase=this.phase;this.phase='paused';this.machine.force('PAUSED');M.Screens.showPause()}else{this.phase=this.prePausePhase==='trace'?'trace':(this.stagePanic?'panic':'playing');this.machine.force(this.phase==='trace'?'TRACE':(this.stagePanic?'PANIC':'PLAYING'));M.Screens.hidePause();if(this.deadline)this.deadline=performance.now()+Math.max(1,this.puzzle.timerSeconds)*1000}}
  };
  M.game=Game;
 })(typeof window!=='undefined'?window:this);

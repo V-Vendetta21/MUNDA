@@ -75,6 +75,7 @@
 
       // --- board hints ---
       'hint.select': 'SELECT A TERMINAL',
+      'hint.trace': 'TRACE THE DOTTED CIRCUIT · HOVER TO PRINT',
       'hint.source': 'SOURCE SELECTED · CHOOSE ITS MATCH',
       'hint.route': 'ROUTE THE CABLE · AVOID BLOCKED ZONES',
       'hint.blocked': 'ROUTE BLOCKED · GUIDE CABLE AROUND THE HOUSING',
@@ -92,6 +93,7 @@
       'toast.junction': 'JUNCTION LOCKED · ROUTE SECOND BRANCH',
       'toast.sequence': 'SEQUENCE HOLD · NEXT {n}',
       'toast.recenter': 'VIEW RECENTERED',
+      'toast.trace': 'CIRCUIT PRINTED · ACCURACY {n}%',
       'toast.remaining': '{a}/{b} · {p}% ILLUMINATED',
       'strip.full': 'FULL SYSTEM ACTIVE',
 
@@ -286,6 +288,7 @@
       'hud.pause': 'Pause',
 
       'hint.select': 'WÄHLE EINEN ANSCHLUSS',
+      'hint.trace': 'ZEICHNE DEN PUNKTIERTEN KREIS · ZUM DRUCKEN SCHWEBEN',
       'hint.source': 'QUELLE GEWÄHLT · WÄHLE IHRE ENTSPRECHUNG',
       'hint.route': 'KABEL VERLEGEN · GESPERRTE ZONEN MEIDEN',
       'hint.blocked': 'WEG BLOCKIERT · KABEL UM DAS GEHÄUSE FÜHREN',
@@ -302,6 +305,7 @@
       'toast.junction': 'VERZWEIGUNG GESPERRT · ZWEITEN ZWEIG VERLEGEN',
       'toast.sequence': 'REIHENFOLGE HALTEN · NÄCHSTE {n}',
       'toast.recenter': 'ANSICHT ZENTRIERT',
+      'toast.trace': 'SCHALTKREIS GEDRUCKT · GENAUIGKEIT {n}%',
       'toast.remaining': '{a}/{b} · {p}% BELEUCHTET',
       'strip.full': 'SYSTEM VOLL AKTIV',
 
@@ -482,6 +486,7 @@
       'hud.pause': 'Pauzë',
 
       'hint.select': 'ZGJIDH NJË TERMINAL',
+      'hint.trace': 'GJURMO QARKUN ME PIKA · RRI PËR TË PRINTUAR',
       'hint.source': 'BURIMI I ZGJEDHUR · ZGJIDH ÇIFTIN E TIJ',
       'hint.route': 'RUTETO KABLLON · SHMANG ZONAT E BLLOKUARA',
       'hint.blocked': 'RRUGA E BLLOKUAR · UDHËZO KABLLON RRETH KASËS',
@@ -498,6 +503,7 @@
       'toast.junction': 'DEGËZIMI I BLLOKUAR · RUTETO DEGËN E DYTË',
       'toast.sequence': 'MBAJTJA E RADHËS · TJETRA {n}',
       'toast.recenter': 'PAMJA U KTHYE NË QENDËR',
+      'toast.trace': 'QARKU U PRINTUA · SAKTËSIA {n}%',
       'toast.remaining': '{a}/{b} · {p}% I NDRIÇUAR',
       'strip.full': 'SISTEMI I PLOTË AKTIV',
 
@@ -678,6 +684,7 @@
       'hud.pause': 'Pause',
 
       'hint.select': 'SÉLECTIONNEZ UNE BORNE',
+      'hint.trace': 'TRACEZ LE CIRCUIT EN POINTILLÉS · SURVOLEZ POUR IMPRIMER',
       'hint.source': 'SOURCE SÉLECTIONNÉE · CHOISISSEZ SON ÉQUIVALENT',
       'hint.route': 'ACHEMINEZ LE CÂBLE · ÉVITEZ LES ZONES BLOQUÉES',
       'hint.blocked': 'VOIE BLOQUÉE · GUIDEZ LE CÂBLE AUTOUR DU BOÎTIER',
@@ -694,6 +701,7 @@
       'toast.junction': 'JONCTION VERROUILLÉE · ACHEMINEZ LA DEUXIÈME BRANCHE',
       'toast.sequence': 'RESPECT DE LA SÉQUENCE · SUIVANT {n}',
       'toast.recenter': 'VUE RECENTRÉE',
+      'toast.trace': 'CIRCUIT IMPRIMÉ · PRÉCISION {n}%',
       'toast.remaining': '{a}/{b} · {p}% ÉCLAIRÉ',
       'strip.full': 'SYSTÈME PLEINEMENT ACTIF',
 

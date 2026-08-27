@@ -38,11 +38,13 @@
       e.preventDefault();
       canvas.setPointerCapture(e.pointerId);
       const p = toLocal(e);
+      if (Game.phase === 'trace') { MUNDA.TraceRenderer.pointer(p.x, p.y); return; }
       Game.onPointerDown(p.x, p.y);
     });
 
     canvas.addEventListener('pointermove', (e) => {
       const p = toLocal(e);
+      if (Game.phase === 'trace') { MUNDA.TraceRenderer.pointer(p.x, p.y); return; }
       if (e.buttons === 0) {
         // hover only
         Game.onPointerMove(p.x, p.y);
@@ -73,10 +75,15 @@
     // resize handling
     global.addEventListener('resize', () => {
       MUNDA.BoardRenderer.resize();
+      if (MUNDA.TraceRenderer && MUNDA.TraceRenderer.resize) MUNDA.TraceRenderer.resize();
       MUNDA.StripRenderer.resize();
     });
     // keyboard
     global.addEventListener('keydown', (e) => {
+      if (Game.phase === 'trace') {
+        if (e.key === 'Escape' || e.key.toLowerCase() === 'p') { Game.pause(true); }
+        return;
+      }
       const number = /^Digit([1-9])$/.exec(e.code) || /^Numpad([1-9])$/.exec(e.code);
       if (number && Game.machine && Game.machine.canInput()) {
         e.preventDefault();

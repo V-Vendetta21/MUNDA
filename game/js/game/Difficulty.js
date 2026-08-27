@@ -54,6 +54,29 @@
     };
   }
 
-  MUNDA.difficulty = { getParams, CAP };
+  MUNDA.difficulty = { getParams, applyTrace, CAP };
+
+  // Adjust an already-generated parameter set based on the pre-assembly
+  // trace accuracy (10..100). Higher accuracy → fewer wires, larger
+  // terminals, cleaner routing (easier). Lower accuracy → more wires,
+  // smaller terminals, more route noise (harder). Wire count stays
+  // within the colour-catalogue cap so the board remains solvable.
+  function applyTrace(params, accuracy) {
+    const acc = Math.max(10, Math.min(100, accuracy || 100));
+    const base = params.wires;
+    const maxExtra = Math.max(0, CAP - base);
+    const extra = MUNDA.CircuitTrace
+      ? MUNDA.CircuitTrace.wireDelta(acc, maxExtra)
+      : 0;
+    // accuracy scales 0 (at 100%) .. 1 (at 10%)
+    const hard = (100 - acc) / 90;
+    return Object.assign({}, params, {
+      wires: base + extra,
+      terminalRadius: Math.max(13, params.terminalRadius - Math.round(hard * 3)),
+      routeNoise: Math.min(0.35, params.routeNoise + hard * 0.05),
+      curve: Math.min(0.8, params.curve + hard * 0.08),
+      traceAccuracy: acc,
+    });
+  }
 
 })(typeof window !== 'undefined' ? window : this);
