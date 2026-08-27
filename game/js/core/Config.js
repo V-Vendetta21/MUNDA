@@ -46,6 +46,7 @@
       largeTerminals: false,
       strongPatterns: false,
       tutorials: true,
+      language: 'en',   // UI language (see core/I18n.js)
     },
     custom: {
       theme: 'mono',             // single monochrome theme

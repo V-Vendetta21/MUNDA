@@ -20,6 +20,7 @@ const MUNDA = {
   },
   StripRenderer: { illuminate() {} },
   audio: { fail() {}, select() {} },
+  t: (key, vars) => (vars ? key + ':' + JSON.stringify(vars) : key),
   state: { progress: { totalMistakes: 0, bestScore: 0, endlessBest: 0 } },
   storage: { saveProgress() {} },
   fmt: String,

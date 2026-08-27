@@ -737,3 +737,42 @@ body:not(.panic-mode) .hud-timer.urgent { animation-duration:1.1s; }
   .panic-mode .game-root::after,.hud-timer.urgent { animation:none; }
   .blackout-mode .board-frame { transition:none; }
 }
+
+/* ============ LANGUAGE TABS ============ */
+.lang-tabs {
+  display: flex; gap: 8px; flex-wrap: wrap;
+  margin: 4px 0 12px;
+}
+.lang-tab {
+  display: inline-flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 4px; min-width: 58px; padding: 8px 6px;
+  border: 1px solid var(--border); border-radius: 10px;
+  background: var(--panel); color: var(--text3);
+  cursor: pointer; transition: border-color .18s, background .18s, transform .12s, color .18s;
+}
+.lang-tab:hover { border-color: var(--border-strong); color: var(--text); transform: translateY(-1px); }
+.lang-tab.sel {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent), 0 6px 20px var(--accent-soft);
+  color: var(--text); background: var(--surface);
+}
+.lang-flag { font-size: 24px; line-height: 1; filter: drop-shadow(0 2px 4px rgba(0,0,0,.45)); }
+.lang-code { font: 700 8px var(--font-mono); letter-spacing: .12em; opacity: .85; }
+.lang-tab--other .lang-flag { font-size: 22px; }
+.lang-other {
+  margin: 2px 0 6px; padding: 12px; border: 1px dashed var(--border-strong);
+  border-radius: 10px; background: rgba(255,255,255,0.02);
+}
+.lang-grid { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 8px; margin-top: 8px; }
+.lang-chip {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 8px 10px; border: 1px solid var(--border); border-radius: 8px;
+  background: var(--panel); color: var(--text2); cursor: pointer;
+  font: 600 10px var(--font-mono); letter-spacing: .04em; text-align: left;
+  transition: border-color .18s, background .18s, transform .12s;
+}
+.lang-chip:hover { border-color: var(--border-strong); transform: translateY(-1px); }
+.lang-chip.sel { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); color: var(--text); }
+@media (max-width:420px) {
+  .lang-grid { grid-template-columns: 1fr; }
+}

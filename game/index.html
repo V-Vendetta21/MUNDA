@@ -19,38 +19,38 @@
       <div class="brand-mark">
         <img src="assets/logo.png" alt="MUNDA" width="1157" height="246">
       </div>
-      <div class="brand-tag">PRECISION LED TEXTILE ASSEMBLY</div>
+      <div class="brand-tag" data-i18n="brand.tag">PRECISION LED TEXTILE ASSEMBLY</div>
     </div>
-    <div class="menu-profile"><span id="menu-rank">TRAINEE</span><span id="menu-progress">STAGE 01 · ROUTING 0%</span></div>
+    <div class="menu-profile"><span id="menu-rank" data-i18n="menu.rank">TRAINEE</span><span id="menu-progress" data-i18n="menu.progress">STAGE 01 · ROUTING 0%</span></div>
     <nav class="menu-nav" aria-label="Game modes">
       <button class="btn btn--primary" data-nav="production">
-        <span class="btn-ico">PS</span><span><b>PRODUCTION SHIFT</b><small>Progress through increasingly complex assemblies.</small></span>
+        <span class="btn-ico">PS</span><span><b data-i18n="menu.nav.production">PRODUCTION SHIFT</b><small data-i18n="menu.nav.production.small">Progress through increasingly complex assemblies.</small></span>
       </button>
       <button class="btn" data-nav="endless">
-        <span class="btn-ico">∞</span><span><b>ENDLESS</b><small>Procedural precision routing with difficulty budgets.</small></span>
+        <span class="btn-ico">∞</span><span><b data-i18n="menu.nav.endless">ENDLESS</b><small data-i18n="menu.nav.endless.small">Procedural precision routing with difficulty budgets.</small></span>
       </button>
       <button class="btn" data-nav="panic">
-        <span class="btn-ico">P!</span><span><b>PANIC MODE</b><small>Timed emergency repair tiers.</small></span>
+        <span class="btn-ico">P!</span><span><b data-i18n="menu.nav.panic">PANIC MODE</b><small data-i18n="menu.nav.panic.small">Timed emergency repair tiers.</small></span>
       </button>
       <button class="btn" data-nav="daily">
-        <span class="btn-ico">24</span><span><b>DAILY ASSEMBLY</b><small>One deterministic local challenge each day.</small></span>
+        <span class="btn-ico">24</span><span><b data-i18n="menu.nav.daily">DAILY ASSEMBLY</b><small data-i18n="menu.nav.daily.small">One deterministic local challenge each day.</small></span>
       </button>
       <button class="btn" data-nav="training">
-        <span class="btn-ico">TR</span><span><b>TRAINING</b><small>Practice individual routing mechanics.</small></span>
+        <span class="btn-ico">TR</span><span><b data-i18n="menu.nav.training">TRAINING</b><small data-i18n="menu.nav.training.small">Practice individual routing mechanics.</small></span>
       </button>
       <button class="btn" data-nav="customization">
-        <span class="btn-ico">CM</span><span><b>CUSTOMIZATION</b></span>
+        <span class="btn-ico">CM</span><span><b data-i18n="menu.nav.customization">CUSTOMIZATION</b></span>
       </button>
       <button class="btn" data-nav="help">
-        <span class="btn-ico">?</span><span><b>HOW TO PLAY</b></span>
+        <span class="btn-ico">?</span><span><b data-i18n="menu.nav.help">HOW TO PLAY</b></span>
       </button>
       <button class="btn" data-nav="settings">
-        <span class="btn-ico">ST</span><span><b>SETTINGS</b></span>
+        <span class="btn-ico">ST</span><span><b data-i18n="menu.nav.settings">SETTINGS</b></span>
       </button>
     </nav>
     <div class="menu-footer">
       <span class="foot-pill" id="menu-best"></span>
-      <span class="foot-pill">INDUSTRY 4.0 · QUALITY CONTROL</span>
+      <span class="foot-pill" data-i18n="menu.footer.industry">INDUSTRY 4.0 · QUALITY CONTROL</span>
       <span class="mute-chip" id="menu-mute" title="Toggle sound" role="button" tabindex="0">♪</span>
     </div>
   </div>
@@ -59,13 +59,13 @@
   <div id="game-root" class="game-root">
     <header class="hud">
       <div class="hud-cell hud-mode"><span class="hud-mode-name" id="hud-mode">PRODUCTION SHIFT</span><span class="hud-conns" id="hud-conns">0/3</span></div>
-      <div class="hud-cell hud-level">LEVEL <span id="hud-level">01</span></div>
+      <div class="hud-cell hud-level"><span data-i18n="hud.level">LEVEL</span> <span id="hud-level">01</span></div>
       <div class="hud-cell hud-score">
-        <div class="hud-score-top">SCORE <span id="hud-score">0</span></div>
+        <div class="hud-score-top"><span data-i18n="hud.score">SCORE</span> <span id="hud-score">0</span></div>
         <div class="hud-streak" id="hud-streak">STREAK ×1</div>
       </div>
-      <div class="hud-cell hud-routing"><span>ROUTING</span><b id="hud-routing">100%</b></div>
-      <div class="hud-cell hud-timer" id="hud-timer" hidden><span>WINDOW</span><b>--</b></div>
+      <div class="hud-cell hud-routing"><span data-i18n="hud.routing">ROUTING</span><b id="hud-routing">100%</b></div>
+      <div class="hud-cell hud-timer" id="hud-timer" hidden><span data-i18n="hud.window">WINDOW</span><b>--</b></div>
       <button class="hud-btn" id="hud-pause" title="Pause">❚❚</button>
     </header>
 
@@ -81,19 +81,19 @@
         <div class="board-corners" aria-hidden="true"></div>
         <canvas id="wires" class="wires-canvas"></canvas>
         <div class="mechanic-strip" id="mechanic-strip" aria-live="polite"></div>
-        <button class="camera-reset" id="camera-reset" type="button" hidden>RESET VIEW</button>
-        <div class="board-hint" id="board-hint">SELECT A TERMINAL</div>
-        <div class="board-shortcuts" aria-hidden="true"><kbd>1–9</kbd> SELECT SOURCE <span>·</span> DRAG TO MATCH</div>
+        <button class="camera-reset" id="camera-reset" type="button" hidden data-i18n="btn.resetView">RESET VIEW</button>
+        <div class="board-hint" id="board-hint" data-i18n="hint.select">SELECT A TERMINAL</div>
+        <div class="board-shortcuts" aria-hidden="true"><kbd>1–9</kbd> <span data-i18n="shortcuts" style="display:inline"></span></div>
       </div>
     </div>
 
     <div class="pause-overlay" id="pause-overlay">
       <div class="modal">
-        <h2>PAUSED</h2>
-        <p class="modal-sub">Production station idle</p>
-        <button class="btn btn--primary" id="pause-resume">RESUME</button>
-        <button class="btn" id="pause-restart">RESTART LEVEL</button>
-        <button class="btn" id="pause-menu">MAIN MENU</button>
+        <h2 data-i18n="pause.title">PAUSED</h2>
+        <p class="modal-sub" data-i18n="pause.sub">Production station idle</p>
+        <button class="btn btn--primary" id="pause-resume" data-i18n="pause.resume">RESUME</button>
+        <button class="btn" id="pause-restart" data-i18n="pause.restart">RESTART LEVEL</button>
+        <button class="btn" id="pause-menu" data-i18n="pause.menu">MAIN MENU</button>
       </div>
     </div>
   </div>
@@ -107,6 +107,7 @@
 </div>
 
 <script src="js/core/Config.js"></script>
+<script src="js/core/I18n.js"></script>
 <script src="js/core/Utils.js"></script>
 <script src="js/core/StateMachine.js"></script>
 <script src="js/core/CablePhysics.js"></script>

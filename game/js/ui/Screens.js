@@ -115,13 +115,13 @@
     },
 
     updateHud: function (g) {
-      const modeNames = { production:'PRODUCTION SHIFT', endless:'ENDLESS', panic:'PANIC MODE', daily:'DAILY ASSEMBLY', training:'TRAINING' };
-      this.els.hudMode.textContent = modeNames[g.mode] || String(g.mode).toUpperCase();
+      const modeNames = { production:'hud.production', endless:'hud.endless', panic:'hud.panic', daily:'hud.daily', training:'hud.training' };
+      this.els.hudMode.textContent = MUNDA.t(modeNames[g.mode] || 'hud.production');
       this.els.hudLevel.innerHTML = '<b>' + String(g.level).padStart(2, '0') + '</b>';
       this.els.hudScore.textContent = U.fmt(g.score);
-      this.els.hudStreak.textContent = 'STREAK ×' + g.streak + ' · ' + g.multiplierLabel;
+      this.els.hudStreak.textContent = MUNDA.t('hud.streak', { n: g.streak }) + ' · ' + g.multiplierLabel;
       this.els.hudStreak.classList.toggle('zero', g.streak === 0);
-      this.els.hudConns.textContent = g.connected + '/' + g.puzzle.count;
+      this.els.hudConns.textContent = MUNDA.t('hud.conns.fmt', { a: g.connected, b: g.puzzle.count });
       this.els.hudRouting.textContent = g.currentRouting() + '%';
       this.els.hudTimer.hidden = !g.deadline;
     },
@@ -136,7 +136,7 @@
       const labels = (puzzle.mechanics.active || []).map((m) => m.replace(/\b\w/g, (x) => x.toUpperCase()));
       labels.push(...(puzzle.mechanics.modifiers || []));
       if (puzzle.major) labels.unshift('PHASE ' + puzzle.major.phase + '/5');
-      this.els.mechanicStrip.textContent = labels.length ? labels.join(' · ') : 'STANDARD HARNESS';
+      this.els.mechanicStrip.textContent = labels.length ? labels.join(' · ') : MUNDA.t('tip.standard');
     },
 
     setHint: function (text, hot) {
@@ -169,35 +169,35 @@
     },
 
     showQC: function (d) {
-      MUNDA.Screens.setStripStatus('QUALITY CHECK · PASS', 'ok');
+      MUNDA.Screens.setStripStatus(MUNDA.t('strip.qcpass'), 'ok');
       const bonuses = [];
-      bonuses.push(`LEVEL BONUS <b style="color:var(--text)">+${U.fmt(d.levelBonus)}</b>`);
-      bonuses.push(`PRECISION BONUS <b style="color:var(--text)">+${U.fmt(d.speedBonus)}</b>`);
-      bonuses.push(`PERFECT ASSEMBLY <b style="color:var(--text)">+${U.fmt(d.perfectBonus)}</b>`);
-      bonuses.push(`ROUTING <b style="color:var(--text)">+${U.fmt(d.routingBonus)}</b>`);
-      bonuses.push(`STREAK <b style="color:var(--text)">×${d.streak}</b>`);
+      bonuses.push(`${MUNDA.t('qc.levelBonus')} <b style="color:var(--text)">+${U.fmt(d.levelBonus)}</b>`);
+      bonuses.push(`${MUNDA.t('qc.precisionBonus')} <b style="color:var(--text)">+${U.fmt(d.speedBonus)}</b>`);
+      bonuses.push(`${MUNDA.t('qc.perfect')} <b style="color:var(--text)">+${U.fmt(d.perfectBonus)}</b>`);
+      bonuses.push(`${MUNDA.t('qc.routingBonus')} <b style="color:var(--text)">+${U.fmt(d.routingBonus)}</b>`);
+      bonuses.push(`${MUNDA.t('qc.streak', { n: d.streak })}`);
 
       const nextBtn = d.mode !== 'daily'
-        ? '<button class="btn btn--primary" data-qc="next">NEXT STAGE <span style="opacity:.7">▸</span></button>'
-        : '<button class="btn btn--primary" data-qc="next">CONTINUE <span style="opacity:.7">∞</span></button>';
+        ? `<button class="btn btn--primary" data-qc="next">${MUNDA.t('qc.next')} <span style="opacity:.7">▸</span></button>`
+        : `<button class="btn btn--primary" data-qc="next">${MUNDA.t('qc.continue')} <span style="opacity:.7">∞</span></button>`;
 
       const html = `
         <div class="modal">
-          <h2 class="ok">QUALITY CONTROL · PASS</h2>
-          <div class="modal-sub">Stage ${String(d.level).padStart(2,'0')} · production verified</div>
-          <div class="pass-badge ok"><span class="pass-dot"></span>SYSTEM STATUS: PASS</div>
-          <div class="assembly-grade"><span>ASSEMBLY GRADE</span><b>${d.rating.grade}</b></div>
+          <h2 class="ok">${MUNDA.t('qc.title')}</h2>
+          <div class="modal-sub">${MUNDA.t('qc.sub', { n: String(d.level).padStart(2,'0') })}</div>
+          <div class="pass-badge ok"><span class="pass-dot"></span>${MUNDA.t('qc.status')}</div>
+          <div class="assembly-grade"><span>${MUNDA.t('qc.grade')}</span><b>${d.rating.grade}</b></div>
           <div class="qc-grid">
-            <div class="qc-cell"><div class="qc-k">PRECISION</div><div class="qc-v good">${d.rating.precision}%</div></div>
-            <div class="qc-cell"><div class="qc-k">ROUTING</div><div class="qc-v">${d.rating.routing}%</div></div>
-            <div class="qc-cell"><div class="qc-k">CABLE ORDER</div><div class="qc-v">${d.rating.cableOrder}%</div></div>
-            <div class="qc-cell"><div class="qc-k">TIME</div><div class="qc-v">${d.rating.speed}%</div></div>
-            <div class="qc-cell"><div class="qc-k">SEQUENCE</div><div class="qc-v">${d.rating.sequence}%</div></div>
-            <div class="qc-cell"><div class="qc-k">CROSSINGS</div><div class="qc-v">${d.crossings}</div></div>
+            <div class="qc-cell"><div class="qc-k">${MUNDA.t('qc.precision')}</div><div class="qc-v good">${d.rating.precision}%</div></div>
+            <div class="qc-cell"><div class="qc-k">${MUNDA.t('qc.routing')}</div><div class="qc-v">${d.rating.routing}%</div></div>
+            <div class="qc-cell"><div class="qc-k">${MUNDA.t('qc.cableOrder')}</div><div class="qc-v">${d.rating.cableOrder}%</div></div>
+            <div class="qc-cell"><div class="qc-k">${MUNDA.t('qc.time')}</div><div class="qc-v">${d.rating.speed}%</div></div>
+            <div class="qc-cell"><div class="qc-k">${MUNDA.t('qc.sequence')}</div><div class="qc-v">${d.rating.sequence}%</div></div>
+            <div class="qc-cell"><div class="qc-k">${MUNDA.t('qc.crossings')}</div><div class="qc-v">${d.crossings}</div></div>
           </div>
-          <div class="qc-bonus">BONUSES · ${bonuses.join(' &nbsp;|&nbsp; ')}</div>
+          <div class="qc-bonus">${MUNDA.t('qc.bonus', { list: bonuses.join(' &nbsp;|&nbsp; ') })}</div>
           ${nextBtn}
-          <button class="btn" data-qc="menu">MAIN MENU</button>
+          <button class="btn" data-qc="menu">${MUNDA.t('qc.menu')}</button>
         </div>`;
       this.showModalHTML(html);
       this.els.modalLayer.querySelector('[data-qc="next"]').addEventListener('click', () => {
@@ -211,45 +211,45 @@
     showFailure: function (d) {
       const endless = d.mode === 'endless';
       const virus = d.reason === 'virus';
-      const diagnostic = d.reason === 'timeout' ? 'VOLTAGE WINDOW CLOSED' : d.reason === 'sequence' ? 'SEQUENCE ERROR' : virus ? 'BIO-CONTAMINATION' : endless ? 'PRODUCTION STOPPED' : 'ROUTING ERROR';
+      const diagnostic = d.reason === 'timeout' ? MUNDA.t('fail.diag.timeout') : d.reason === 'sequence' ? MUNDA.t('fail.diag.sequence') : virus ? MUNDA.t('fail.diag.virus') : endless ? MUNDA.t('fail.diag.stop') : MUNDA.t('fail.diag.routing');
       MUNDA.Screens.setStripStatus(diagnostic, 'bad');
       const title = diagnostic;
       const msg = virus
-        ? 'Live wire contacted a contamination node.<br>The production line has been isolated and the run is over.'
+        ? MUNDA.t('fail.msg.virus')
         : endless
-        ? 'Incorrect electrical connection detected.<br>The LED textile system failed quality check.'
+        ? MUNDA.t('fail.msg.endless')
         : d.reason === 'timeout'
-        ? 'Calibration window expired.<br>Assembly rejected — resetting production line.'
+        ? MUNDA.t('fail.msg.timeout')
         : d.reason === 'sequence'
-        ? 'Circuit order did not match the schematic.<br>Assembly rejected — resetting production line.'
-        : 'Circuit mismatch detected.<br>Assembly rejected — resetting production line.';
+        ? MUNDA.t('fail.msg.sequence')
+        : MUNDA.t('fail.msg.default');
 
       const stats = endless
         ? `<div class="stat-list">
-             <div class="stat-row"><span class="k">FINAL SCORE</span><span class="v">${U.fmt(d.score)}</span></div>
-             <div class="stat-row"><span class="k">LEVEL REACHED</span><span class="v">${String(d.level).padStart(2,'0')}</span></div>
-             <div class="stat-row"><span class="k">CORRECT CONNECTIONS</span><span class="v">${U.fmt(MUNDA.game.correctConnections)}</span></div>
-             <div class="stat-row"><span class="k">MISTAKES</span><span class="v">${U.fmt(d.mistakes)}</span></div>
-             <div class="stat-row"><span class="k">STREAK</span><span class="v">×${d.streak}</span></div>
-             <div class="stat-row"><span class="k">BEST SCORE</span><span class="v">${U.fmt(d.best)}</span></div>
-             <div class="stat-row"><span class="k">LONGEST RUN</span><span class="v">${String(MUNDA.state.progress.endlessLongest).padStart(2,'0')}</span></div>
+             <div class="stat-row"><span class="k">${MUNDA.t('fail.score')}</span><span class="v">${U.fmt(d.score)}</span></div>
+             <div class="stat-row"><span class="k">${MUNDA.t('fail.level')}</span><span class="v">${String(d.level).padStart(2,'0')}</span></div>
+             <div class="stat-row"><span class="k">${MUNDA.t('fail.conns')}</span><span class="v">${U.fmt(MUNDA.game.correctConnections)}</span></div>
+             <div class="stat-row"><span class="k">${MUNDA.t('fail.mistakes')}</span><span class="v">${U.fmt(d.mistakes)}</span></div>
+             <div class="stat-row"><span class="k">${MUNDA.t('fail.streak')}</span><span class="v">×${d.streak}</span></div>
+             <div class="stat-row"><span class="k">${MUNDA.t('fail.best')}</span><span class="v">${U.fmt(d.best)}</span></div>
+             <div class="stat-row"><span class="k">${MUNDA.t('fail.longest')}</span><span class="v">${String(MUNDA.state.progress.endlessLongest).padStart(2,'0')}</span></div>
            </div>`
         : `<div class="stat-list">
-             <div class="stat-row"><span class="k">STAGE REACHED</span><span class="v">${String(d.level).padStart(2,'0')}</span></div>
-             <div class="stat-row"><span class="k">RUN SCORE</span><span class="v">${U.fmt(d.score)}</span></div>
-             <div class="stat-row"><span class="k">BEST SCORE</span><span class="v">${U.fmt(d.best)}</span></div>
+             <div class="stat-row"><span class="k">${MUNDA.t('fail.stage')}</span><span class="v">${String(d.level).padStart(2,'0')}</span></div>
+             <div class="stat-row"><span class="k">${MUNDA.t('fail.runscore')}</span><span class="v">${U.fmt(d.score)}</span></div>
+             <div class="stat-row"><span class="k">${MUNDA.t('fail.best')}</span><span class="v">${U.fmt(d.best)}</span></div>
            </div>`;
 
-      const restart = endless ? 'TRY AGAIN' : 'RESTART PRODUCTION';
+      const restart = endless ? MUNDA.t('fail.retry') : MUNDA.t('fail.restart');
       const html = `
         <div class="modal">
           <h2 class="bad">${title}</h2>
-          <div class="modal-sub">Stage ${String(d.level).padStart(2,'0')} · quality check failed</div>
-          <div class="pass-badge bad"><span class="pass-dot"></span>${virus ? 'LINE CONTAMINATED' : 'DEFECTIVE ASSEMBLY'}</div>
+          <div class="modal-sub">${MUNDA.t('fail.sub', { n: String(d.level).padStart(2,'0') })}</div>
+          <div class="pass-badge bad"><span class="pass-dot"></span>${virus ? MUNDA.t('fail.badge.virus') : MUNDA.t('fail.badge')}</div>
           <div class="modal-msg">${msg}</div>
           ${stats}
           <button class="btn btn--danger" data-f="retry">${restart}</button>
-          <button class="btn" data-f="menu">MAIN MENU</button>
+          <button class="btn" data-f="menu">${MUNDA.t('qc.menu')}</button>
         </div>`;
       this.showModalHTML(html);
       this.els.modalLayer.querySelector('[data-f="retry"]').addEventListener('click', () => {
@@ -270,25 +270,25 @@
     updateMenuBest: function () {
       const p = MUNDA.state.progress;
       const parts = [];
-      if (p.bestScore > 0) parts.push('BEST ' + U.fmt(p.bestScore));
-      if (p.highestLevel > 1) parts.push('STAGE ' + String(p.highestLevel).padStart(2, '0'));
-      if (p.endlessBest > 0) parts.push('ENDLESS ' + U.fmt(p.endlessBest));
-      this.els.menuBest.textContent = parts.length ? parts.join(' · ') : 'NO RUNS YET';
+      if (p.bestScore > 0) parts.push(MUNDA.t('menu.best.best') + ' ' + U.fmt(p.bestScore));
+      if (p.highestLevel > 1) parts.push(MUNDA.t('menu.best.stage') + ' ' + String(p.highestLevel).padStart(2, '0'));
+      if (p.endlessBest > 0) parts.push(MUNDA.t('menu.best.endless') + ' ' + U.fmt(p.endlessBest));
+      this.els.menuBest.textContent = parts.length ? parts.join(' · ') : MUNDA.t('menu.best.none');
       this.els.menuRank.textContent = p.rank || MUNDA.Scoring.rank(p);
-      this.els.menuProgress.textContent = 'STAGE ' + String(p.highestLevel || 1).padStart(2,'0') + ' · ROUTING ' + (p.averageRouting || 0) + '%';
+      this.els.menuProgress.textContent = MUNDA.t('menu.progress').replace('STAGE 01', 'STAGE ' + String(p.highestLevel || 1).padStart(2,'0')).replace('ROUTING 0%', 'ROUTING ' + (p.averageRouting || 0) + '%');
     },
 
     showTraining: function () {
       const items = [
-        ['basic','BASIC WIRING'],['guides','CABLE ROUTING'],['sequence','SEQUENCES'],['moving','MOVING TERMINALS'],['timed','TIMED CIRCUITS'],['damaged','DAMAGED WIRES'],['split','SPLIT CIRCUITS'],['power','POWER LOGIC'],['locks','LOCKED TERMINALS']
+        ['basic','train.basic'],['guides','train.guides'],['sequence','train.sequence'],['moving','train.moving'],['timed','train.timed'],['damaged','train.damaged'],['split','train.split'],['power','train.power'],['locks','train.locks']
       ];
-      this.showModalHTML(`<div class="panel"><div class="panel-head"><h2>TRAINING</h2><button class="panel-close" data-training-close>×</button></div><p class="modal-msg">Choose one system. Training is untimed and errors reset only the local circuit.</p><div class="training-grid">${items.map(([id,label])=>`<button class="btn" data-training="${id}"><b>${label}</b><small>Guided practice board</small></button>`).join('')}</div></div>`);
+      this.showModalHTML(`<div class="panel"><div class="panel-head"><h2>${MUNDA.t('train.title')}</h2><button class="panel-close" data-training-close>×</button></div><p class="modal-msg">${MUNDA.t('train.sub')}</p><div class="training-grid">${items.map(([id,label])=>`<button class="btn" data-training="${id}"><b>${MUNDA.t(label)}</b></button>`).join('')}</div></div>`);
       this.els.modalLayer.querySelector('[data-training-close]').onclick=()=>this.hideModal();
       this.els.modalLayer.querySelectorAll('[data-training]').forEach((b)=>b.onclick=()=>{this.hideModal();MUNDA.game.startMode('training',{training:b.dataset.training})});
     },
 
     showPanicTiers: function () {
-      this.showModalHTML(`<div class="panel panic-tier-panel"><div class="panel-head"><h2>PANIC MODE</h2><button class="panel-close" data-panic-close>×</button></div><p class="modal-msg">High-pressure repair with readable, deterministic escalation.</p><div class="training-grid">${['I','II','III','IV','Ω'].map((tier,i)=>`<button class="btn" data-panic="${i+1}"><b>PANIC ${tier}</b><small>${42-i*5}s calibration window</small></button>`).join('')}</div></div>`);
+      this.showModalHTML(`<div class="panel panic-tier-panel"><div class="panel-head"><h2>${MUNDA.t('panic.title')}</h2><button class="panel-close" data-panic-close>×</button></div><p class="modal-msg">${MUNDA.t('panic.sub')}</p><div class="training-grid">${['I','II','III','IV','Ω'].map((tier,i)=>`<button class="btn" data-panic="${i+1}"><b>PANIC ${tier}</b><small>${MUNDA.t('panic.window', { n: 42-i*5 })}</small></button>`).join('')}</div></div>`);
       this.els.modalLayer.querySelector('[data-panic-close]').onclick=()=>this.hideModal();
       this.els.modalLayer.querySelectorAll('[data-panic]').forEach((b)=>b.onclick=()=>{this.hideModal();MUNDA.game.startMode('panic',{level:Number(b.dataset.panic)})});
     },
@@ -297,9 +297,9 @@
       if (!MUNDA.state.settings.tutorials) return;
       const mechanic=(puzzle.mechanics.active||[]).find((m)=>!MUNDA.state.progress.tutorialsSeen[m]);
       if (!mechanic) return;
-      const text={obstacles:'CABLE ROUTING · Guide the cable around blocked housings.',guides:'HARNESS GUIDES · Pass required cables through marked clips.',sequence:'CONNECTION ORDER · Follow the illuminated sequence.',moving:'MOVING LINE · Track motion is smooth and freezes during a drag.',timed:'VOLTAGE WINDOW · Complete the board before calibration closes.',damaged:'CONTINUITY REPAIR · Connect a damaged cable twice: repair, then route.',split:'SPLIT CIRCUIT · Lock the junction, then complete the branch.',power:'POWER LIMIT · Follow the displayed safe circuit order.',hidden:'MEMORY SIGNAL · Select a source to reveal its match briefly.',locks:'TERMINAL LOCK · Tap twice to calibrate before routing.',panic:'PANIC MODE · Work quickly; empty releases never count as mistakes.',major:'MAJOR ASSEMBLY · Five phases activate as the harness fills.'}[mechanic];
+      const text={obstacles:'tip.obstacles',guides:'tip.guides',sequence:'tip.sequence',moving:'tip.moving',timed:'tip.timed',damaged:'tip.damaged',split:'tip.split',power:'tip.power',hidden:'tip.hidden',locks:'tip.locks',panic:'tip.panic',major:'tip.major'}[mechanic];
       if (!text) return;
-      this.els.tutorialTip.textContent=text;this.els.tutorialTip.hidden=false;
+      this.els.tutorialTip.textContent=MUNDA.t(text);this.els.tutorialTip.hidden=false;
       MUNDA.state.progress.tutorialsSeen[mechanic]=true;MUNDA.storage.saveProgress(MUNDA.state.progress);
       clearTimeout(this._tutorialTimer);this._tutorialTimer=setTimeout(()=>{this.els.tutorialTip.hidden=true},4300);
     },
@@ -314,22 +314,22 @@
     showHelp: function () {
       const html = `
         <div class="panel">
-          <div class="panel-head"><h2>HOW TO PLAY</h2><button class="panel-close" data-help="close">✕</button></div>
+          <div class="panel-head"><h2>${MUNDA.t('help.title')}</h2><button class="panel-close" data-help="close">✕</button></div>
           <div class="panel-section">
             <div class="help-list">
-              <div class="help-step"><div class="n">1</div><p><b>Match the terminals.</b> Connect each wire on the left to its matching connector on the right by <b>colour</b>, <b>number</b> and <b>symbol</b>.</p></div>
-              <div class="help-step"><div class="n">2</div><p><b>Drag or tap.</b> Press a terminal and drag the live wire to its pair, or tap the two matching terminals one after the other.</p></div>
-              <div class="help-step"><div class="n">3</div><p><b>Fill the strip.</b> Each correct connection energises a section of the MUNDA textile LED lighting strip.</p></div>
-              <div class="help-step"><div class="n">4</div><p><b>Avoid contamination.</b> Do not let the live wire touch the small green virus nodes — contact ends the run immediately.</p></div>
-              <div class="help-step"><div class="n">5</div><p><b>Use the keyboard.</b> Press <b>1–9</b> or the numpad to select the numbered source post, then click its match on the right.</p></div>
-              <div class="help-step"><div class="n">6</div><p><b>Complete the stage</b> to earn level, precision and perfect-assembly bonuses. Chain clean stages for streak multipliers.</p></div>
+              <div class="help-step"><div class="n">1</div><p><b>${MUNDA.t('help.s1.t')}</b> ${MUNDA.t('help.s1.b')}</p></div>
+              <div class="help-step"><div class="n">2</div><p><b>${MUNDA.t('help.s2.t')}</b> ${MUNDA.t('help.s2.b')}</p></div>
+              <div class="help-step"><div class="n">3</div><p><b>${MUNDA.t('help.s3.t')}</b> ${MUNDA.t('help.s3.b')}</p></div>
+              <div class="help-step"><div class="n">4</div><p><b>${MUNDA.t('help.s4.t')}</b> ${MUNDA.t('help.s4.b')}</p></div>
+              <div class="help-step"><div class="n">5</div><p><b>${MUNDA.t('help.s5.t')}</b> ${MUNDA.t('help.s5.b')}</p></div>
+              <div class="help-step"><div class="n">6</div><p><b>${MUNDA.t('help.s6.t')}</b> ${MUNDA.t('help.s6.b')}</p></div>
             </div>
           </div>
           <div class="panel-section">
-            <h3>CONNECTION CUES (ACCESSIBILITY)</h3>
+            <h3>${MUNDA.t('help.cues')}</h3>
             <div class="help-colorlegend" id="help-legend"></div>
           </div>
-          <button class="btn btn--primary" data-help="start">START PRODUCTION SHIFT</button>
+          <button class="btn btn--primary" data-help="start">${MUNDA.t('help.start')}</button>
         </div>`;
       this.showModalHTML(html);
       const layer = this.els.modalLayer;

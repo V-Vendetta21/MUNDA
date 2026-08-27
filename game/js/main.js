@@ -15,6 +15,7 @@
 
     // apply theme + accessibility classes
     MUNDA.applyTheme();
+    if (MUNDA.i18n && MUNDA.i18n.applyToDOM) MUNDA.i18n.applyToDOM();
     MUNDA.Screens.init();
     MUNDA.Screens.refreshMute();
     MUNDA.Screens.updateMenuBest();
@@ -89,7 +90,7 @@
     });
     document.getElementById('camera-reset').addEventListener('click', () => {
       document.querySelector('.board-frame').style.transform = '';
-      MUNDA.Screens.toast('VIEW RECENTERED', true);
+      MUNDA.Screens.toast(MUNDA.t('toast.recenter'), true);
     });
   }
 

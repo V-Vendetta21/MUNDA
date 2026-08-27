@@ -895,7 +895,7 @@
   }
 
   function setLanguage(code) {
-    if (!localeInfo(code)) return false;
+    if (!registry()[code]) return false;
     if (MUNDA.state && MUNDA.state.settings) {
       MUNDA.state.settings.language = code;
       if (MUNDA.storage) MUNDA.storage.saveSettings(MUNDA.state.settings);
