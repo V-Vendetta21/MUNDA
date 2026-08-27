@@ -76,7 +76,7 @@
       // --- board hints ---
       'hint.select': 'SELECT A TERMINAL',
       'hint.trace': 'TRACE THE DOTTED CIRCUIT · HOVER TO PRINT',
-      'hint.trace.hold': 'HOLD + TRACE THE DOTTED CIRCUIT · RELEASE TO PRINT',
+      'hint.trace.hold': 'HOLD + TRACE THE DOTTED CIRCUIT · THEN PRESS PRINT CIRCUIT',
       'hint.source': 'SOURCE SELECTED · CHOOSE ITS MATCH',
       'hint.route': 'ROUTE THE CABLE · AVOID BLOCKED ZONES',
       'hint.blocked': 'ROUTE BLOCKED · GUIDE CABLE AROUND THE HOUSING',
@@ -291,7 +291,7 @@
 
       'hint.select': 'WÄHLE EINEN ANSCHLUSS',
       'hint.trace': 'ZEICHNE DEN PUNKTIERTEN KREIS · ZUM DRUCKEN SCHWEBEN',
-      'hint.trace.hold': 'GEDRÜCKT HALTEN + KREIS ZEICHNEN · LOSLASSEN ZUM DRUCKEN',
+      'hint.trace.hold': 'GEDRÜCKT HALTEN + KREIS ZEICHNEN · DANN SCHALTKREIS-DRUCKEN DRÜCKEN',
       'hint.source': 'QUELLE GEWÄHLT · WÄHLE IHRE ENTSPRECHUNG',
       'hint.route': 'KABEL VERLEGEN · GESPERRTE ZONEN MEIDEN',
       'hint.blocked': 'WEG BLOCKIERT · KABEL UM DAS GEHÄUSE FÜHREN',
@@ -491,7 +491,7 @@
 
       'hint.select': 'ZGJIDH NJË TERMINAL',
       'hint.trace': 'GJURMO QARKUN ME PIKA · RRI PËR TË PRINTUAR',
-      'hint.trace.hold': 'MBAJ + GJURMO QARKUN ME PIKA · LËSHO PËR TË PRINTUAR',
+      'hint.trace.hold': 'MBAJ + GJURMO QARKUN ME PIKA · PASTAJ SHTYP PRINTO QARKUN',
       'hint.source': 'BURIMI I ZGJEDHUR · ZGJIDH ÇIFTIN E TIJ',
       'hint.route': 'RUTETO KABLLON · SHMANG ZONAT E BLLOKUARA',
       'hint.blocked': 'RRUGA E BLLOKUAR · UDHËZO KABLLON RRETH KASËS',
@@ -691,7 +691,7 @@
 
       'hint.select': 'SÉLECTIONNEZ UNE BORNE',
       'hint.trace': 'TRACEZ LE CIRCUIT EN POINTILLÉS · SURVOLEZ POUR IMPRIMER',
-      'hint.trace.hold': 'MAINTENIR + TRACER LE CIRCUIT · RELÂCHER POUR IMPRIMER',
+      'hint.trace.hold': 'MAINTENIR + TRACER LE CIRCUIT · PUIS APPUYER SUR IMPRIMER LE CIRCUIT',
       'hint.source': 'SOURCE SÉLECTIONNÉE · CHOISISSEZ SON ÉQUIVALENT',
       'hint.route': 'ACHEMINEZ LE CÂBLE · ÉVITEZ LES ZONES BLOQUÉES',
       'hint.blocked': 'VOIE BLOQUÉE · GUIDEZ LE CÂBLE AUTOUR DU BOÎTIER',

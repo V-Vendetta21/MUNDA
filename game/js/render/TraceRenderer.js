@@ -80,14 +80,15 @@
       this.coverage = this.pointsPx.length ? traced / this.pointsPx.length : 0;
       const acc = MUNDA.CircuitTrace.accuracy(this.coverage);
       MUNDA.Screens.setHint(MUNDA.t('hint.trace') + ' · ' + acc + '%');
-      if (this.coverage >= 1) { this.done = true; this.held = false; this.complete(); }
+      // do NOT auto-complete — the player must click PRINT CIRCUIT to continue.
     },
 
-    // release prints what was drawn
+    // releasing the mouse just stops drawing; the player must press
+    // PRINT CIRCUIT to lock in the trace and continue.
     pointerUp: function (x, y) {
       if (!this.active || this.done) return;
       this.held = false;
-      this.complete();
+      MUNDA.Screens.setHint(MUNDA.t('hint.trace.hold') + ' · ' + MUNDA.CircuitTrace.accuracy(this.coverage) + '%');
     },
 
     // Finalize the trace now with the current coverage (lets the player
