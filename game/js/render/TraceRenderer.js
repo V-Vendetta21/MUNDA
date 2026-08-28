@@ -42,6 +42,8 @@
       if (!this.raf) { this.loop = this.loop.bind(this); this.raf = requestAnimationFrame(this.loop); }
       const btn = document.getElementById('trace-print');
       if (btn) btn.hidden = false;
+      const rbtn = document.getElementById('trace-reset');
+      if (rbtn) rbtn.hidden = false;
       MUNDA.Screens.setStripStatus(MUNDA.t('hint.trace.hold'));
       MUNDA.Screens.setHint(MUNDA.t('hint.trace.hold'));
     },
@@ -100,6 +102,19 @@
       this.complete();
     },
 
+    // Clear the current drawing and re-arm the trace so the player can
+    // re-print from scratch (coverage resets to 0).
+    reset: function () {
+      if (!this.active || this.done) return;
+      this.held = false;
+      this.tracePath = [];
+      this.coverage = 0;
+      this.head = 0;
+      this._lastTick = 0;
+      MUNDA.audio.click?.();
+      MUNDA.Screens.setHint(MUNDA.t('hint.trace.hold') + ' · 0%');
+    },
+
     resize: function () {
       if (!this.canvas) return;
       const rect = this.canvas.getBoundingClientRect();
@@ -126,6 +141,8 @@
       this.trace = null;
       const btn = document.getElementById('trace-print');
       if (btn) btn.hidden = true;
+      const rbtn = document.getElementById('trace-reset');
+      if (rbtn) rbtn.hidden = true;
     },
 
     // ---- animation loop ----

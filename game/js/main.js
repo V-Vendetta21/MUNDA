@@ -128,6 +128,10 @@
     if (tracePrint) tracePrint.addEventListener('click', () => {
       if (Game.phase === 'trace') MUNDA.TraceRenderer.printNow();
     });
+    const traceReset = document.getElementById('trace-reset');
+    if (traceReset) traceReset.addEventListener('click', () => {
+      if (Game.phase === 'trace') MUNDA.TraceRenderer.reset();
+    });
   }
 
   // subtle animated ambient background canvas

@@ -261,6 +261,7 @@
       // --- misc buttons ---
       'btn.resetView': 'RESET VIEW',
       'btn.printCircuit': 'PRINT CIRCUIT',
+      'btn.resetPrint': 'RESET PRINT',
     },
 
     de: {
@@ -470,6 +471,7 @@
       'shortcuts': '1–9 QUELLE WÄHLEN · ZIEHEN ZUM ZUORDNEN',
       'btn.resetView': 'ANSICHT ZURÜCKSETZEN',
       'btn.printCircuit': 'SCHALTKREIS DRUCKEN',
+      'btn.resetPrint': 'DRUCK ZURÜCKSETZEN',
     },
 
     sq: {
@@ -679,6 +681,7 @@
       'shortcuts': '1–9 ZGJIDH BURIMIN · TËRHIQ PËR TË PËRPUTHUR',
       'btn.resetView': 'RIVENDO PAMJEN',
       'btn.printCircuit': 'PRINTO QARKUN',
+      'btn.resetPrint': 'RIVENDOSO PRINTIN',
     },
 
     fr: {
@@ -888,6 +891,7 @@
       'shortcuts': '1–9 SÉLECTIONNER LA SOURCE · GLISSER POUR ASSOCIER',
       'btn.resetView': 'RÉINITIALISER LA VUE',
       'btn.printCircuit': 'IMPRIMER LE CIRCUIT',
+      'btn.resetPrint': 'RÉINITIALISER L\'IMPRESSION',
     },
   };
 
