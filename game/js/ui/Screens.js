@@ -96,6 +96,7 @@
     enterGame: function (mode) {
       this.els.screenMenu.classList.remove('active');
       this.els.gameRoot.classList.add('on');
+      this.els.gameRoot.setAttribute('data-mode', mode || 'production');
       document.getElementById('board').style.display = 'block';
       MUNDA.BoardRenderer.init();
       if (MUNDA.TraceRenderer && MUNDA.TraceRenderer.init) MUNDA.TraceRenderer.init();
@@ -133,6 +134,12 @@
       this.els.hudTimer.hidden = false;
       this.els.hudTimer.querySelector('b').textContent = seconds.toFixed(1) + 's';
       this.els.hudTimer.classList.toggle('urgent', seconds < 6);
+      // make the label clearer for time circuits
+      if (!this._timerLabelSet) {
+        const span = this.els.hudTimer.querySelector('span');
+        if (span && MUNDA.t) span.textContent = MUNDA.t('hud.window');
+        this._timerLabelSet = true;
+      }
     },
 
     setMechanics: function (puzzle) {
@@ -140,6 +147,7 @@
       labels.push(...(puzzle.mechanics.modifiers || []));
       if (puzzle.major) labels.unshift('PHASE ' + puzzle.major.phase + '/5');
       this.els.mechanicStrip.textContent = labels.length ? labels.join(' · ') : MUNDA.t('tip.standard');
+      this.els.mechanicStrip.classList.toggle('modifiers-active', !!(puzzle.mechanics.modifiers || []).length);
     },
 
     setHint: function (text, hot) {

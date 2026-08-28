@@ -863,3 +863,25 @@ body:not(.panic-mode) .hud-timer.urgent { animation-duration:1.1s; }
 .menu-nav .btn { transition: transform .16s ease, background .2s ease, border-color .2s ease, box-shadow .2s ease; }
 .menu-nav .btn:hover .btn-ico { box-shadow:0 0 16px var(--accent-soft); border-color:var(--accent); transform:scale(1.08); }
 .menu-nav .btn-ico { transition: transform .16s ease, box-shadow .2s ease, border-color .2s ease; }
+
+/* ============ MODE DIFFERENTIATION & PROMINENT MECHANICS ============ */
+/* Time circuits: larger, glowing countdown with a pulsing ring */
+.hud-timer b { font-size:17px; letter-spacing:.04em; }
+.hud-timer span::before { content:"⏱"; margin-right:5px; }
+.hud-timer:not(.urgent) { box-shadow:inset 0 -2px rgba(255,255,255,.55), 0 0 14px rgba(255,255,255,.10); border-radius:8px; padding:4px 10px; }
+.hud-timer.urgent { border-radius:8px; padding:4px 10px; background:rgba(255,40,40,.12); }
+
+/* Per-mode HUD + board accent so each mode feels distinct */
+.game-root[data-mode="endless"] .hud { border-bottom-color:rgba(120,200,255,.5); }
+.game-root[data-mode="panic"] .hud { border-bottom-color:rgba(255,80,80,.6); }
+.game-root[data-mode="daily"] .hud { border-bottom-color:rgba(255,220,120,.6); }
+.game-root[data-mode="training"] .hud { border-bottom-color:rgba(120,255,170,.5); }
+.game-root[data-mode="production"] .hud { border-bottom-color:var(--accent-soft); }
+.game-root[data-mode="endless"] .hud-mode-name { color:#8fd0ff; }
+.game-root[data-mode="panic"] .hud-mode-name { color:#ff9a9a; }
+.game-root[data-mode="daily"] .hud-mode-name { color:#ffe29a; }
+.game-root[data-mode="training"] .hud-mode-name { color:#a7ffc9; }
+
+/* mechanic-strip badge styling for active modifiers */
+.mechanic-strip { text-transform:uppercase; }
+.mechanic-strip.modifiers-active { color:#ffe9a8; border-color:rgba(255,233,168,.4); }

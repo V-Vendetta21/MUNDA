@@ -84,6 +84,10 @@
       'hint.update': 'SOURCE UPDATED · CHOOSE OPPOSITE POST',
       'hint.calib.start': 'CALIBRATION STARTED · TAP AGAIN TO ALIGN',
       'hint.power': 'POWER LIMIT · ROUTE CIRCUIT {n} FIRST',
+      'hint.sequence.next': 'NEXT · CONNECT {n} IN SEQUENCE',
+      'hint.sequence.next.tag': 'NEXT {n}',
+      'hint.damaged.tag': 'REPAIR',
+      'hint.sequence.steps': ' {a}/{b} STEPS',
       'hint.zerocross': 'ZERO CROSS · INTERSECTION REJECTED WITHOUT PENALTY',
       'hint.virus': 'BIO-CONTAMINATION DETECTED',
 
@@ -304,6 +308,10 @@
       'hint.update': 'QUELLE AKTUALISIERT · GEGENÜBERLIEGENDEN POL WÄHLEN',
       'hint.calib.start': 'KALIBRIERUNG GESTARTET · ZUM AUSRICHTEN ERNEUT TIPPEN',
       'hint.power': 'LEISTUNGSGRENZE · SCHALTE KREIS {n} ZUERST',
+      'hint.sequence.next': 'WEITER · VERBINDE {n} DER REIHE NACH',
+      'hint.sequence.next.tag': 'WEITER {n}',
+      'hint.damaged.tag': 'REPARATUR',
+      'hint.sequence.steps': ' {a}/{b} SCHRITTE',
       'hint.zerocross': 'NULLKREUZUNG · KREUZUNG OHNE STRAFE ABGELEHNT',
       'hint.virus': 'BIO-KONTAMINATION ERKANNT',
 
@@ -509,6 +517,10 @@
       'hint.update': 'BURIMI I PËRDITËSUAR · ZGJIDH POLIN E KUNDËRT',
       'hint.calib.start': 'KALIBRIMI NISI · PREK PËRSËRI PËR TË RRESHTUAR',
       'hint.power': 'KUFIZI I FUQISË · RUTETO QARKUN {n} SË PARI',
+      'hint.sequence.next': 'TJETRI · LIDH {n} SIPAS RENDITJES',
+      'hint.sequence.next.tag': 'TJETRI {n}',
+      'hint.damaged.tag': 'RIPARO',
+      'hint.sequence.steps': ' {a}/{b} HAPA',
       'hint.zerocross': 'KALIM ZERO · KRYQËZIMI U REFUZUA PA NDIKIM',
       'hint.virus': 'U DETEKTUA NDOTJE BIO',
 
@@ -714,6 +726,10 @@
       'hint.update': 'SOURCE MISE À JOUR · CHOISISSEZ LA BORNE OPPOSÉE',
       'hint.calib.start': 'CALIBRAGE DÉMARRÉ · RAPPUYEZ POUR ALIGNER',
       'hint.power': 'LIMITE DE PUISSANCE · ACHEMINEZ LE CIRCUIT {n} D\'ABORD',
+      'hint.sequence.next': 'SUIVANT · CONNECTEZ {n} DANS L\'ORDRE',
+      'hint.sequence.next.tag': 'SUIVANT {n}',
+      'hint.damaged.tag': 'RÉPARER',
+      'hint.sequence.steps': ' {a}/{b} ÉTAPES',
       'hint.zerocross': 'ZÉRO CROISEMENT · INTERSECTION REJETÉE SANS PÉNALITÉ',
       'hint.virus': 'BIO-CONTAMINATION DÉTECTÉE',
 

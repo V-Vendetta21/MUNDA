@@ -312,8 +312,99 @@
       this.drawVirusHazards(c);
       if (this.drag && this.selection) this.drawDragLine(c);
       this.drawTerminals(c);
+      this.drawMechanicOverlay(c);
       if (this.failure && this.failure.active) this.drawSparks(c);
       if (this.virusHit) this.drawVirusParticles(c);
+    },
+
+    // Prominent visual cues for active mechanics so they read at a glance.
+    drawMechanicOverlay: function (c) {
+      const p = this.puzzle;
+      if (!p || !MUNDA.game) return;
+      const g = MUNDA.game;
+      const next = g.nextRequiredWire ? g.nextRequiredWire() : null;
+      const pulse = Math.sin(this.lastT / 240) * 0.5 + 0.5;
+
+      // POWER LOGIC: number badges showing the enforced order on each involved wire
+      if (p.power) {
+        c.save();
+        p.power.order.forEach((wi, orderIdx) => {
+          const w = p.wires[wi];
+          if (!w || w.connected) return;
+          const pos = this.termPos(wi, 'left');
+          const isNext = next === wi;
+          c.font = '800 13px Roboto, Arial';
+          c.textAlign = 'center'; c.textBaseline = 'middle';
+          const r = 11 + (isNext ? pulse * 3 : 0);
+          c.shadowColor = '#fff'; c.shadowBlur = isNext ? 14 : 6;
+          c.beginPath(); c.arc(pos.x - 20, pos.y, r, 0, Math.PI * 2);
+          c.fillStyle = isNext ? '#ffffff' : 'rgba(255,255,255,0.14)';
+          c.fill();
+          c.strokeStyle = isNext ? '#000' : 'rgba(255,255,255,0.7)';
+          c.lineWidth = 1.6; c.stroke();
+          c.shadowBlur = 0;
+          c.fillStyle = isNext ? '#000000' : '#ffffff';
+          c.fillText(String(orderIdx + 1), pos.x - 20, pos.y);
+        });
+        c.restore();
+      }
+
+      // SEQUENCE: pulsing ring on the terminal that must be connected next
+      if (next != null) {
+        const pos = this.termPos(next, 'left');
+        c.save();
+        c.globalAlpha = 0.55 + pulse * 0.45;
+        c.shadowColor = '#fff'; c.shadowBlur = 18;
+        c.strokeStyle = 'rgba(255,255,255,0.95)';
+        c.lineWidth = 3;
+        c.setLineDash([6, 5]);
+        c.beginPath(); c.arc(pos.x, pos.y, this.radius() + 8 + pulse * 5, 0, Math.PI * 2); c.stroke();
+        c.setLineDash([]);
+        // small "NEXT" tag above the source
+        c.font = '800 10px Roboto, Arial'; c.textAlign = 'center';
+        const label = p.sequence ? MUNDA.t('hint.sequence.next.tag', { n: String(next + 1).padStart(2, '0') }) : 'NEXT';
+        const tagW = c.measureText(label).width + 14;
+        c.fillStyle = '#ffffff';
+        this.roundRect(pos.x - tagW / 2, pos.y - this.radius() - 26, tagW, 16, 8);
+        c.fill();
+        c.fillStyle = '#000000';
+        c.fillText(label, pos.x, pos.y - this.radius() - 17);
+        c.restore();
+      }
+
+      // DAMAGED: pulsing broken-connection mark + "REPAIR" tag on damaged wires
+      p.wires.forEach((w, i) => {
+        if (!w.damaged || w.repaired) return;
+        const pos = this.termPos(i, 'left');
+        c.save();
+        const blink = Math.sin(this.lastT / 200 + i) * 0.5 + 0.5;
+        c.globalAlpha = 0.6 + blink * 0.4;
+        c.shadowColor = '#fff'; c.shadowBlur = 12;
+        c.strokeStyle = '#ffffff';
+        c.lineWidth = 3;
+        // lightning/break glyph
+        const x = pos.x - 30, y = pos.y;
+        c.beginPath();
+        c.moveTo(x, y - 12); c.lineTo(x + 6, y - 4); c.lineTo(x - 1, y - 4);
+        c.lineTo(x + 7, y + 8); c.lineTo(x - 4, y + 8); c.lineTo(x - 8, y + 2); c.lineTo(x - 2, y + 2);
+        c.closePath(); c.stroke();
+        c.font = '800 8px Roboto, Arial'; c.textAlign = 'center';
+        c.fillStyle = '#ffffff';
+        c.fillText(MUNDA.t('hint.damaged.tag'), x, y + 18);
+        c.restore();
+      });
+
+      // SPLIT: "1/2" branch counter on the junction box while it's not ready
+      p.wires.forEach((w, i) => {
+        if (w.branches > 1 && !w.branchReady) {
+          c.save();
+          c.font = '800 9px Roboto, Arial'; c.textAlign = 'center';
+          c.fillStyle = '#ffe9a8';
+          c.shadowColor = '#fff'; c.shadowBlur = 8;
+          c.fillText('1/2', this.cssW * 0.5 + 30, this.cssH * 0.5 - 18);
+          c.restore();
+        }
+      });
     },
 
     drawRoutingHardware: function (c) {
@@ -518,7 +609,39 @@
       const r = this.radius();
       for (const t of p.left) this.drawTerminal(c, t.wire, 'left', this.termPos(t.wire, 'left'), r);
       for (const t of p.right) {
-        if (t.motion) { const pos=this.termPosRight(t.wire); c.save(); c.strokeStyle='rgba(255,255,255,.18)'; c.lineWidth=2; c.beginPath(); c.moveTo(pos.x,pos.y-this.cssH*t.motion.amplitude-8); c.lineTo(pos.x,pos.y+this.cssH*t.motion.amplitude+8); c.stroke(); c.restore(); }
+        if (t.motion) {
+          const pos = this.termPosRight(t.wire);
+          const m = t.motion;
+          const amp = this.cssH * m.amplitude;
+          const drift = Math.sin(this.lastT * m.speed + m.phase) * amp;
+          // motion track line
+          c.save();
+          c.strokeStyle = 'rgba(255,255,255,.22)';
+          c.lineWidth = 2;
+          c.setLineDash([3, 6]);
+          c.beginPath(); c.moveTo(pos.x, pos.y - amp - 6); c.lineTo(pos.x, pos.y + amp + 6); c.stroke();
+          c.setLineDash([]);
+          c.restore();
+          // ghost terminal showing full travel range
+          const driftPulse = Math.sin(this.lastT / 600 + m.phase) * 0.5 + 0.5;
+          for (const sign of [-1, 1]) {
+            c.save();
+            c.globalAlpha = 0.12 + driftPulse * 0.08;
+            c.strokeStyle = 'rgba(255,255,255,.6)';
+            c.lineWidth = 1.2;
+            c.beginPath(); c.arc(pos.x, pos.y + sign * amp, r, 0, Math.PI * 2); c.stroke();
+            c.restore();
+          }
+          // small up/down chevrons hinting movement
+          c.save();
+          c.globalAlpha = 0.5;
+          c.strokeStyle = '#fff'; c.lineWidth = 1.6;
+          const cy = pos.y + Math.sign(drift) * 14;
+          c.beginPath();
+          c.moveTo(pos.x - 4, cy); c.lineTo(pos.x, cy + Math.sign(drift) * 5); c.lineTo(pos.x + 4, cy);
+          c.stroke();
+          c.restore();
+        }
         this.drawTerminal(c, t.wire, 'right', this.termPosRight(t.wire), r);
       }
     },
@@ -581,8 +704,30 @@
         c.fillStyle='rgba(255,255,255,.28)';c.font='700 12px Roboto,Arial';c.textAlign='center';c.fillText('—',pos.x,pos.y+4);
       }
       if (locked) {
-        c.shadowBlur=8;c.strokeStyle='#fff';c.lineWidth=2;c.beginPath();c.arc(pos.x,pos.y,r+4,-Math.PI/2,Math.PI*(terminal.calibration?1.2:.35));c.stroke();
-        c.fillStyle='#0a0a0a';c.strokeStyle='#fff';this.roundRect(pos.x-7,pos.y-5,14,11,2);c.fill();c.stroke();
+        const calib = terminal.calibration;
+        // pulsing red ring around locked terminals so they're unmistakable
+        const lp = Math.sin(this.lastT / 300) * 0.5 + 0.5;
+        c.shadowBlur = 10 + lp * 8;
+        c.strokeStyle = calib ? '#ffffff' : 'rgba(255,90,90,0.9)';
+        c.lineWidth = 2.4;
+        c.beginPath(); c.arc(pos.x, pos.y, r + 4 + (calib ? 0 : lp * 2), 0, Math.PI * 2); c.stroke();
+        // padlock shackle + body
+        c.shadowBlur = 0;
+        c.strokeStyle = '#ffffff'; c.lineWidth = 2;
+        c.beginPath(); c.arc(pos.x, pos.y - r - 6, 6, Math.PI, 0); c.stroke();
+        c.fillStyle = calib ? '#ffffff' : 'rgba(255,255,255,0.9)';
+        c.strokeStyle = '#000'; c.lineWidth = 1;
+        c.fillRect(pos.x - 6, pos.y - r - 2, 12, 9);
+        c.strokeRect(pos.x - 6, pos.y - r - 2, 12, 9);
+        c.fillStyle = '#000';
+        c.beginPath(); c.arc(pos.x, pos.y - r + 2, 1.6, 0, Math.PI * 2); c.fill();
+        if (calib) {
+          // "unlocking" flash
+          c.globalAlpha = lp;
+          c.strokeStyle = '#fff'; c.lineWidth = 3;
+          c.beginPath(); c.arc(pos.x, pos.y, r + 8 + lp * 4, 0, Math.PI * 2); c.stroke();
+          c.globalAlpha = 1;
+        }
       }
       c.restore();
     },
