@@ -109,8 +109,37 @@
 
   function clampVal(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
 
+  // Generate a random, visually-distinct palette for all wires.
+  // Uses golden-angle hue spacing so colours stay distinguishable, then
+  // jitters lightness/saturation a little for variety. Returns
+  // { [wireId]: { base, dark, glow } }.
+  function randomPalette(random) {
+    const rnd = random || Math.random;
+    const catalog = MUNDA.WIRE_CATALOG;
+    const n = catalog.length;
+    const golden = 137.508; // golden angle in degrees
+    // random starting hue + whether we go light or dark overall
+    const startHue = rnd() * 360;
+    const baseLight = 48 + rnd() * 22; // 48..70
+    const satRange = [55, 92];
+    const out = {};
+    catalog.forEach((w, i) => {
+      const hue = (startHue + golden * i) % 360;
+      const sat = satRange[0] + rnd() * (satRange[1] - satRange[0]);
+      const light = clampVal(baseLight + (rnd() - 0.5) * 16, 34, 80);
+      const base = U.hslToHex(hue, sat, light);
+      out[w.id] = {
+        base,
+        dark: U.mix(base, '#000000', 0.68),
+        glow: U.mix(base, '#ffffff', 0.30),
+      };
+    });
+    return out;
+  }
+
   MUNDA.resolveWires = cachedResolveWires;
   MUNDA.invalidateWireCache = invalidateWireCache;
+  MUNDA.randomPalette = randomPalette;
   MUNDA.currentTheme = currentTheme;
   MUNDA.accentColor = accentColor;
   MUNDA.accent2Color = accent2Color;

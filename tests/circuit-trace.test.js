@@ -53,6 +53,24 @@ test('HSL conversion utilities round-trip hex colors', () => {
   assert.ok(U.luminance(darker) < U.luminance('#808080'));
 });
 
+test('randomPalette produces a distinct colour for every wire', () => {
+  const M = load(['core/Config.js', 'core/Utils.js', 'core/Palette.js']);
+  // deterministic fake RNG
+  let seed = 42;
+  const fakeRandom = () => { seed = (seed * 1103515245 + 12345) % 2147483648; return seed / 2147483648; };
+  const palette = M.randomPalette(fakeRandom);
+  const ids = M.WIRE_CATALOG.map((w) => w.id);
+  for (const id of ids) {
+    assert.ok(palette[id], `wire ${id} should have a palette entry`);
+    assert.match(palette[id].base, /^#[0-9a-f]{6}$/i);
+    assert.match(palette[id].dark, /^#[0-9a-f]{6}$/i);
+    assert.match(palette[id].glow, /^#[0-9a-f]{6}$/i);
+  }
+  // golden-angle spacing should keep hues distinct (no two identical bases)
+  const bases = Object.values(palette).map((p) => p.base);
+  assert.equal(new Set(bases).size, bases.length, 'palette colours should be distinct');
+});
+
 test('circuit trace coverage rewards a trace that follows the target', () => {
   const M = load('game/CircuitTrace.js');
   const t = M.CircuitTrace.generate(5);

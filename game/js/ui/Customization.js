@@ -33,7 +33,10 @@
             </div>
 
             <div class="color-list" id="c-wires"></div>
-            <button class="btn btn--sm btn--ghost" id="c-wires-reset" style="margin-top:10px">${MUNDA.t('custom.resetWires')}</button>
+            <div class="color-actions">
+              <button class="btn btn--sm btn--ghost" id="c-wires-random" type="button">${MUNDA.t('custom.randomizeWires')}</button>
+              <button class="btn btn--sm btn--ghost" id="c-wires-reset" type="button">${MUNDA.t('custom.resetWires')}</button>
+            </div>
           </div>
 
           <button class="btn btn--primary" data-c="done">${MUNDA.t('settings.done')}</button>
@@ -153,6 +156,7 @@
           <div class="color-swatch" data-wire="${w.id}" style="background:${base}"></div>
           <span class="c-name">${w.name}</span>
           <input type="color" data-wire="${w.id}" value="${base}">
+          <button type="button" class="color-rand" data-wire="${w.id}" aria-label="Random ${w.name}" title="Random colour">🎲</button>
           <button type="button" class="color-edit" data-wire="${w.id}" aria-expanded="false" aria-label="Edit ${w.name}">H/S/L</button>
           <div class="color-hsl" data-wire="${w.id}" hidden>
             <label>H <input type="range" data-wire="${w.id}" data-hsl="h" min="0" max="360" step="1" value="${Math.round(hsl.h)}"><b data-wire="${w.id}" data-hslv="h">${Math.round(hsl.h)}</b></label>
@@ -273,13 +277,62 @@
       bindGlobal('c-wire-sat', 'wireSat', 'c-wire-sat-v');
       bindGlobal('c-wire-light', 'wireLight', 'c-wire-light-v');
 
+      // randomize one wire's colour
+      layer.querySelectorAll('.color-rand[data-wire]').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          const id = btn.getAttribute('data-wire');
+          const hex = U.hslToHex(Math.random() * 360, 55 + Math.random() * 37, 45 + Math.random() * 30);
+          if (!custom.wires) custom.wires = {};
+          custom.wires[id] = hex;
+          MUNDA.invalidateWireCache();
+          paint(id, hex);
+          syncHsl(id);
+          MUNDA.storage.saveCustom(custom);
+          MUNDA.audio.select();
+        });
+      });
+
+      // randomize the whole palette (all wires / nodes)
+      layer.querySelector('#c-wires-random').addEventListener('click', () => {
+        const palette = MUNDA.randomPalette();
+        if (!custom.wires) custom.wires = {};
+        Object.keys(palette).forEach((id) => { custom.wires[id] = palette[id].base; });
+        MUNDA.invalidateWireCache();
+        MUNDA.storage.saveCustom(custom);
+        this.repaintWires();
+        MUNDA.audio.click();
+      });
+
       layer.querySelector('#c-wires-reset').addEventListener('click', () => {
         custom.wires = null;
         custom.wireSat = 0; custom.wireLight = 0;
         MUNDA.storage.saveCustom(custom);
         MUNDA.invalidateWireCache();
-        this.buildWires();
+        const satInp = layer.querySelector('#c-wire-sat'), litInp = layer.querySelector('#c-wire-light');
+        if (satInp) { satInp.value = 0; layer.querySelector('#c-wire-sat-v').textContent = '0'; }
+        if (litInp) { litInp.value = 0; layer.querySelector('#c-wire-light-v').textContent = '0'; }
+        this.repaintWires();
         MUNDA.audio.click();
+      });
+    },
+
+    // Repaint swatches, hex pickers and HSL sliders in place without rebuilding
+    // the rows (so listeners survive). Called after randomize / reset.
+    repaintWires: function () {
+      const layer = document.getElementById('modal-layer');
+      const defs = MUNDA.resolveWires();
+      defs.forEach((w) => {
+        const sw = layer.querySelector(`.color-swatch[data-wire="${w.id}"]`);
+        const picker = layer.querySelector(`input[type="color"][data-wire="${w.id}"]`);
+        const hsl = U.hexToHsl(w.base);
+        if (sw) sw.style.background = w.base;
+        if (picker) picker.value = w.base;
+        layer.querySelectorAll(`[data-wire="${w.id}"][data-hsl]`).forEach((inp) => {
+          inp.value = Math.round(hsl[inp.getAttribute('data-hsl')]);
+        });
+        layer.querySelectorAll(`[data-wire="${w.id}"][data-hslv]`).forEach((b) => {
+          b.textContent = Math.round(hsl[b.getAttribute('data-hslv')]);
+        });
       });
     },
 

@@ -199,6 +199,7 @@
       'custom.wireLight': 'WIRE LIGHTNESS',
       'custom.wireLight.small': 'Brighten or darken all wire colours',
       'custom.resetWires': 'RESET WIRE COLORS',
+      'custom.randomizeWires': 'RANDOMIZE WIRES',
 
       // --- training ---
       'train.title': 'TRAINING',
@@ -410,6 +411,7 @@
       'custom.wireLight': 'KABEL-HELLIGKEIT',
       'custom.wireLight.small': 'Alle Kabelfarben aufhellen oder abdunkeln',
       'custom.resetWires': 'KABELFARBEN ZURÜCKSETZEN',
+      'custom.randomizeWires': 'KABEL ZUFALLSFARBEN',
 
       'train.title': 'TRAINING',
       'train.sub': 'Wähle ein System. Training ist zeitlich unbegrenzt; Fehler setzen nur den lokalen Schaltkreis zurück.',
@@ -614,6 +616,7 @@
       'custom.wireLight': 'NDRITSHMËRIA E KABLLOVE',
       'custom.wireLight.small': 'Ndriço ose errëso të gjitha ngjyrat e kabllove',
       'custom.resetWires': 'RIVENDO NGJYRAT E KABLLOVE',
+      'custom.randomizeWires': 'RANDOMIZO KABLLOT',
 
       'train.title': 'TRAJNIM',
       'train.sub': 'Zgjidh një sistem. Trajnimi është pa kohë dhe gabimet rivendosin vetëm qarkun lokal.',
@@ -818,6 +821,7 @@
       'custom.wireLight': 'LUMINOSITÉ DES FILS',
       'custom.wireLight.small': 'Éclaircit ou assombrit toutes les couleurs des fils',
       'custom.resetWires': 'RÉINITIALISER LES COULEURS DES CÂBLES',
+      'custom.randomizeWires': 'ALÉATOIRISER LES CÂBLES',
 
       'train.title': 'FORMATION',
       'train.sub': 'Choisissez un système. La formation est sans limite de temps ; les erreurs ne réinitialisent que le circuit local.',

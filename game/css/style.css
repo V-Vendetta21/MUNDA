@@ -522,6 +522,14 @@ body::before {
 .color-hsl label { display: inline-flex; align-items: center; gap: 6px; font: 600 9px var(--font-mono); letter-spacing: .05em; color: var(--text3); }
 .color-hsl label b { color: var(--text2); min-width: 22px; text-align: right; font: 700 9px var(--font-mono); }
 .color-hsl input[type="range"] { width: 84px; }
+/* random + reset actions, per-wire random dice */
+.color-actions { display: flex; gap: 8px; margin-top: 12px; }
+.color-rand {
+  font-size: 13px; line-height: 1; color: var(--text2);
+  padding: 4px 6px; border: 1px solid var(--border); border-radius: 6px;
+  background: var(--panel); cursor: pointer; transition: border-color .15s, transform .12s;
+}
+.color-rand:hover { border-color: var(--border-strong); transform: scale(1.1); }
 
 /* settings rows */
 .set-row {
