@@ -734,9 +734,9 @@ body {
 .trace-print:hover { transform:translateX(-50%) translateY(-1px); box-shadow:0 0 30px rgba(255,255,255,.4),0 14px 36px rgba(0,0,0,.55); filter:brightness(1.06); }
 .trace-print:active { transform:translateX(-50%) translateY(0) scale(.98); }
 .trace-print[hidden] { display:none; }
-/* RESET PRINT — secondary ghost button beside PRINT CIRCUIT */
+/* RESET PRINT — secondary ghost button below PRINT CIRCUIT */
 .trace-print--reset {
-  left: calc(50% - 92px);
+  left:50%; bottom:6px;
   min-height:40px; padding:0 14px;
   color:#eee; border:1px solid rgba(255,255,255,.35);
   background:rgba(12,12,12,.85);
