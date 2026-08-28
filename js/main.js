@@ -481,15 +481,11 @@
      loading the game iframe so the first PLAY click is instant. */
   function scheduleGamePreload() {
     if (gameLoaded) return;
-    if (document.readyState === 'complete') {
-      setTimeout(preloadGame, 250);
-    } else {
-      window.addEventListener('load', function () { setTimeout(preloadGame, 250); });
-    }
-    // Fallback: preload on first interaction even if load is delayed.
-    ['pointerdown', 'keydown', 'touchstart'].forEach(function (evt) {
-      window.addEventListener(evt, function () { setTimeout(preloadGame, 0); }, { once: true, passive: true });
-    });
+    // Start loading the game iframe as soon as possible so the first PLAY
+    // click is instant — no idle wait.
+    preloadGame();
+    if (document.readyState === 'complete') return;
+    window.addEventListener('load', preloadGame);
   }
   scheduleGamePreload();
 })();

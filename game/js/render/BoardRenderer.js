@@ -273,7 +273,7 @@
         if (this.complete.t >= 1 && !this.complete.done) {
           this.complete.done = true;
           const cb = this.complete.cb;
-          setTimeout(cb, 250);
+          setTimeout(cb, 120);
         }
       }
       if (this.failure && this.failure.active) {
