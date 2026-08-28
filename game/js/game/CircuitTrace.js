@@ -76,16 +76,21 @@
     },
   };
 
-  function pickShape(seed) {
+  // simpler shapes for early / first-time levels so the player eases in
+  const EASY_SHAPES = ['loop', 'square', 'triangle', 'wave'];
+
+  function pickShape(seed, easy) {
     const random = rng((seed || 1) * 2654435761);
-    const names = Object.keys(SHAPES);
-    return names[Math.floor(random() * names.length)];
+    const pool = easy ? EASY_SHAPES : Object.keys(SHAPES);
+    return pool[Math.floor(random() * pool.length)];
   }
 
   // Generate a random dotted circuit to trace.
+  // `easy` = true limits the pool to simple shapes (used for the first
+  // production-shift stage).
   // Returns { shape, points } where points are normalized 0..1.
-  function generate(seed) {
-    const shape = pickShape(seed);
+  function generate(seed, easy) {
+    const shape = pickShape(seed, !!easy);
     return { shape, points: SHAPES[shape](rng((seed || 1) * 1103515245)) };
   }
 

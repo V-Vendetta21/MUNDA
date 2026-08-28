@@ -11,7 +11,9 @@
   },
   beginTrace(){
    // Pre-assembly: print a random MUNDA circuit by tracing its dotted outline.
-   this.trace=M.CircuitTrace?M.CircuitTrace.generate(this.seed+this.level*31):null;
+   // The very first production-shift stage uses an easy shape to ease the player in.
+   const easy = this.mode === 'production' && this.level <= 1;
+   this.trace = M.CircuitTrace ? M.CircuitTrace.generate(this.seed + this.level * 31, easy) : null;
    this.phase='trace';this.machine.force('TRACE');
    // halt the stale board renderer so the trace owns the canvas
    M.BoardRenderer.puzzle=null;M.BoardRenderer.selection=null;M.BoardRenderer.drag=null;

@@ -50,11 +50,12 @@
     pointerDown: function (x, y) {
       if (!this.active || this.done) return;
       this.held = true;
-      this.tracePath = [{ x, y }];
-      this.coverage = 0;
-      this.head = 0;
+      // Do NOT reset the trace: a second click continues from the earlier
+      // drawing instead of erasing it. Only start a fresh path if none exists.
+      if (this.tracePath.length === 0) this.tracePath = [{ x, y }];
+      const acc = MUNDA.CircuitTrace.accuracy(this.coverage);
       MUNDA.audio.select?.();
-      MUNDA.Screens.setHint(MUNDA.t('hint.trace') + ' · 0%');
+      MUNDA.Screens.setHint(MUNDA.t('hint.trace') + ' · ' + acc + '%');
     },
 
     // draw while the pointer is held down

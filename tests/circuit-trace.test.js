@@ -30,6 +30,29 @@ test('circuit trace is deterministic per seed', () => {
   assert.equal(M.CircuitTrace.generate(12077).shape, M.CircuitTrace.generate(12077).shape);
 });
 
+test('circuit trace easy mode limits to simple shapes', () => {
+  const M = load('game/CircuitTrace.js');
+  for (let seed = 1; seed < 50; seed++) {
+    const t = M.CircuitTrace.generate(seed, true);
+    assert.ok(['loop', 'square', 'triangle', 'wave'].includes(t.shape), `seed ${seed} gave ${t.shape}`);
+  }
+});
+
+test('HSL conversion utilities round-trip hex colors', () => {
+  const M = load(['core/Config.js', 'core/Utils.js', 'game/CircuitTrace.js']);
+  const U = M;
+  const samples = ['#e6194b', '#3b78ff', '#f2f4f8', '#12305f', '#ffffff', '#000000'];
+  for (const hex of samples) {
+    const hsl = U.hexToHsl(hex);
+    assert.equal(U.hslToHex(hsl.h, hsl.s, hsl.l), hex, `${hex} should round-trip`);
+  }
+  // adjustHsl brightens or darkens in a bounded way
+  const brighter = U.adjustHsl('#808080', 0, 30);
+  const darker = U.adjustHsl('#808080', 0, -30);
+  assert.ok(U.luminance(brighter) > U.luminance('#808080'));
+  assert.ok(U.luminance(darker) < U.luminance('#808080'));
+});
+
 test('circuit trace coverage rewards a trace that follows the target', () => {
   const M = load('game/CircuitTrace.js');
   const t = M.CircuitTrace.generate(5);

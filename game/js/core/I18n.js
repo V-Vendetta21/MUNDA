@@ -194,6 +194,10 @@
       'custom.title': 'CUSTOMIZATION',
       'custom.wires': 'WIRE COLORS',
       'custom.wires.note': 'Adjust the wire colours. Symbols and numbers stay visible for accessibility.',
+      'custom.wireSat': 'WIRE SATURATION',
+      'custom.wireSat.small': 'Boost or mute all wire colours',
+      'custom.wireLight': 'WIRE LIGHTNESS',
+      'custom.wireLight.small': 'Brighten or darken all wire colours',
       'custom.resetWires': 'RESET WIRE COLORS',
 
       // --- training ---
@@ -401,6 +405,10 @@
       'custom.title': 'ANPASSUNG',
       'custom.wires': 'KABELFARBEN',
       'custom.wires.note': 'Passe die Kabelfarben an. Symbole und Zahlen bleiben zur Barrierefreiheit sichtbar.',
+      'custom.wireSat': 'KABEL-SÄTTIGUNG',
+      'custom.wireSat.small': 'Alle Kabelfarben verstärken oder abschwächen',
+      'custom.wireLight': 'KABEL-HELLIGKEIT',
+      'custom.wireLight.small': 'Alle Kabelfarben aufhellen oder abdunkeln',
       'custom.resetWires': 'KABELFARBEN ZURÜCKSETZEN',
 
       'train.title': 'TRAINING',
@@ -601,6 +609,10 @@
       'custom.title': 'PERSONALIZIM',
       'custom.wires': 'NGJYRAT E KABLLOVE',
       'custom.wires.note': 'Rregullo ngjyrat e kabllove. Simbolet dhe numrat mbeten të dukshëm për aksesueshmëri.',
+      'custom.wireSat': 'NGOPJA E KABLLOVE',
+      'custom.wireSat.small': 'Rrit ose zvogëlo ngjyrat e të gjitha kabllove',
+      'custom.wireLight': 'NDRITSHMËRIA E KABLLOVE',
+      'custom.wireLight.small': 'Ndriço ose errëso të gjitha ngjyrat e kabllove',
       'custom.resetWires': 'RIVENDO NGJYRAT E KABLLOVE',
 
       'train.title': 'TRAJNIM',
@@ -801,6 +813,10 @@
       'custom.title': 'PERSONNALISATION',
       'custom.wires': 'COULEURS DES CÂBLES',
       'custom.wires.note': 'Ajustez les couleurs des câbles. Symboles et numéros restent visibles pour l\'accessibilité.',
+      'custom.wireSat': 'SATURATION DES FILS',
+      'custom.wireSat.small': 'Amplifie ou atténue toutes les couleurs des fils',
+      'custom.wireLight': 'LUMINOSITÉ DES FILS',
+      'custom.wireLight.small': 'Éclaircit ou assombrit toutes les couleurs des fils',
       'custom.resetWires': 'RÉINITIALISER LES COULEURS DES CÂBLES',
 
       'train.title': 'FORMATION',
