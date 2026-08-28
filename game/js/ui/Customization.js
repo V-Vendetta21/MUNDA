@@ -261,10 +261,11 @@
           refresh();
           MUNDA.invalidateWireCache();
           // repaint swatches so the user sees the global effect live
+          // (resolveWires already applies the global delta on top of overrides)
           const defs = MUNDA.resolveWires();
           defs.forEach((w) => {
             const sw = layer.querySelector(`.color-swatch[data-wire="${w.id}"]`);
-            if (sw) sw.style.background = (custom.wires && custom.wires[w.id]) || w.base;
+            if (sw) sw.style.background = w.base;
           });
         });
         inp.addEventListener('change', () => { MUNDA.storage.saveCustom(custom); MUNDA.audio.select(); });

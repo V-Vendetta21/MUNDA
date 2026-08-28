@@ -509,6 +509,19 @@ body::before {
 }
 .color-row .c-name { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.08em; color: var(--text2); flex: 1; text-transform: uppercase; }
 .color-row input[type="color"] { width: 0; height: 0; border: none; padding: 0; opacity: 0; }
+/* colour edit toggle + HSL sliders */
+.color-edit {
+  font: 700 8px var(--font-mono); letter-spacing: .06em; color: var(--text2);
+  padding: 5px 8px; border: 1px solid var(--border); border-radius: 6px;
+  background: var(--panel); cursor: pointer; transition: border-color .15s, color .15s;
+}
+.color-edit:hover { border-color: var(--border-strong); color: var(--text); }
+.color-edit[aria-expanded="true"] { border-color: var(--accent); color: var(--text); }
+.color-hsl { display: flex; flex-wrap: wrap; gap: 6px 14px; margin-top: 8px; padding-top: 8px; border-top: 1px dashed var(--border); }
+.color-row { flex-wrap: wrap; }
+.color-hsl label { display: inline-flex; align-items: center; gap: 6px; font: 600 9px var(--font-mono); letter-spacing: .05em; color: var(--text3); }
+.color-hsl label b { color: var(--text2); min-width: 22px; text-align: right; font: 700 9px var(--font-mono); }
+.color-hsl input[type="range"] { width: 84px; }
 
 /* settings rows */
 .set-row {
