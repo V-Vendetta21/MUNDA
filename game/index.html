@@ -15,6 +15,7 @@
   <!-- ============ MAIN MENU ============ -->
   <div id="screen-menu" class="screen screen--menu active">
     <div class="menu-glow" aria-hidden="true"></div>
+    <div class="menu-grid" aria-hidden="true"></div>
     <div class="menu-corners" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
     <div class="menu-scan" aria-hidden="true"></div>
     <div class="brand">
@@ -23,35 +24,39 @@
         <img src="assets/logo.png" alt="MUNDA" width="1157" height="246">
       </div>
       <div class="brand-tag" data-i18n="brand.tag">PRECISION LED TEXTILE ASSEMBLY</div>
+      <div class="brand-tech" aria-hidden="true">
+        <span>TEXTILE</span><i></i><span>LED</span><i></i><span>CONTROL</span><i></i><span>QUALITY</span>
+      </div>
     </div>
     <div class="menu-profile"><span id="menu-rank" data-i18n="menu.rank">TRAINEE</span><span id="menu-progress" data-i18n="menu.progress">STAGE 01 · ROUTING 0%</span></div>
     <nav class="menu-nav" aria-label="Game modes">
       <button class="btn btn--primary" data-nav="production">
-        <span class="btn-ico">PS</span><span><b data-i18n="menu.nav.production">PRODUCTION SHIFT</b><small data-i18n="menu.nav.production.small">Progress through increasingly complex assemblies.</small></span>
+        <span class="btn-key" aria-hidden="true">1</span><span class="btn-ico">PS</span><span><b data-i18n="menu.nav.production">PRODUCTION SHIFT</b><small data-i18n="menu.nav.production.small">Progress through increasingly complex assemblies.</small></span>
       </button>
       <button class="btn" data-nav="endless">
-        <span class="btn-ico">∞</span><span><b data-i18n="menu.nav.endless">ENDLESS</b><small data-i18n="menu.nav.endless.small">Procedural precision routing with difficulty budgets.</small></span>
+        <span class="btn-key" aria-hidden="true">2</span><span class="btn-ico">∞</span><span><b data-i18n="menu.nav.endless">ENDLESS</b><small data-i18n="menu.nav.endless.small">Procedural precision routing with difficulty budgets.</small></span>
       </button>
       <button class="btn" data-nav="panic">
-        <span class="btn-ico">P!</span><span><b data-i18n="menu.nav.panic">PANIC MODE</b><small data-i18n="menu.nav.panic.small">Timed emergency repair tiers.</small></span>
+        <span class="btn-key" aria-hidden="true">3</span><span class="btn-ico">P!</span><span><b data-i18n="menu.nav.panic">PANIC MODE</b><small data-i18n="menu.nav.panic.small">Timed emergency repair tiers.</small></span>
       </button>
       <button class="btn" data-nav="daily">
-        <span class="btn-ico">24</span><span><b data-i18n="menu.nav.daily">DAILY ASSEMBLY</b><small data-i18n="menu.nav.daily.small">One deterministic local challenge each day.</small></span>
+        <span class="btn-key" aria-hidden="true">4</span><span class="btn-ico">24</span><span><b data-i18n="menu.nav.daily">DAILY ASSEMBLY</b><small data-i18n="menu.nav.daily.small">One deterministic local challenge each day.</small></span>
       </button>
       <button class="btn" data-nav="training">
-        <span class="btn-ico">TR</span><span><b data-i18n="menu.nav.training">TRAINING</b><small data-i18n="menu.nav.training.small">Practice individual routing mechanics.</small></span>
+        <span class="btn-key" aria-hidden="true">5</span><span class="btn-ico">TR</span><span><b data-i18n="menu.nav.training">TRAINING</b><small data-i18n="menu.nav.training.small">Practice individual routing mechanics.</small></span>
       </button>
       <button class="btn" data-nav="customization">
-        <span class="btn-ico">CM</span><span><b data-i18n="menu.nav.customization">CUSTOMIZATION</b></span>
+        <span class="btn-key" aria-hidden="true">6</span><span class="btn-ico">CM</span><span><b data-i18n="menu.nav.customization">CUSTOMIZATION</b></span>
       </button>
       <button class="btn" data-nav="help">
-        <span class="btn-ico">?</span><span><b data-i18n="menu.nav.help">HOW TO PLAY</b></span>
+        <span class="btn-key" aria-hidden="true">?</span><span class="btn-ico">?</span><span><b data-i18n="menu.nav.help">HOW TO PLAY</b></span>
       </button>
       <button class="btn" data-nav="settings">
-        <span class="btn-ico">ST</span><span><b data-i18n="menu.nav.settings">SETTINGS</b></span>
+        <span class="btn-key" aria-hidden="true">8</span><span class="btn-ico">ST</span><span><b data-i18n="menu.nav.settings">SETTINGS</b></span>
       </button>
     </nav>
     <div class="menu-footer">
+      <div class="menu-leds" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
       <span class="foot-pill" id="menu-best"></span>
       <span class="foot-pill" data-i18n="menu.footer.industry">INDUSTRY 4.0 · QUALITY CONTROL</span>
       <span class="mute-chip" id="menu-mute" title="Toggle sound" role="button" tabindex="0">♪</span>
@@ -81,7 +86,7 @@
         </div>
       </div>
       <div class="board-frame">
-        <div class="board-corners" aria-hidden="true"></div>
+        <div class="board-corners" aria-hidden="true"><i></i><i></i></div>
         <canvas id="wires" class="wires-canvas"></canvas>
         <div class="mechanic-strip" id="mechanic-strip" aria-live="polite"></div>
         <button class="camera-reset" id="camera-reset" type="button" hidden data-i18n="btn.resetView">RESET VIEW</button>

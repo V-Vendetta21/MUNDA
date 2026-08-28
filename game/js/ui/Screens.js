@@ -70,6 +70,19 @@
         this.refreshMute();
         if (!MUNDA.state.settings.muted) MUNDA.audio.click();
       });
+
+      // keyboard shortcuts (1–6, 8) launch menu actions via their keycap hints
+      const keyMap = { 1:'production', 2:'endless', 3:'panic', 4:'daily', 5:'training', 6:'customization', '?':'help', 8:'settings' };
+      global.addEventListener('keydown', (e) => {
+        if (!this.els.screenMenu.classList.contains('active')) return;
+        if (e.repeat || e.ctrlKey || e.metaKey || e.altKey) return;
+        const key = e.key === '?' ? '?' : /^[1-8]$/.test(e.key) ? e.key : null;
+        if (!key) return;
+        const nav = keyMap[key];
+        if (!nav) return;
+        const btn = U.$all('[data-nav]', this.els.screenMenu).find((b) => b.getAttribute('data-nav') === nav);
+        if (btn) { e.preventDefault(); btn.click(); }
+      });
     },
 
     refreshMute: function () {

@@ -700,7 +700,7 @@ body {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .menu-glow, .board-frame::after, .menu-scan, .brand-ring span { animation:none; }
+  .menu-glow, .board-frame::after, .menu-scan, .brand-ring span, .menu-leds i, .hud::before { animation:none; }
 }
 
 /* Precision Routing 2.0 — premium monochrome systems */
@@ -896,3 +896,67 @@ body:not(.panic-mode) .hud-timer.urgent { animation-duration:1.1s; }
 /* mechanic-strip badge styling for active modifiers */
 .mechanic-strip { text-transform:uppercase; }
 .mechanic-strip.modifiers-active { color:#ffe9a8; border-color:rgba(255,233,168,.4); }
+
+/* ============ MENU & INTERFACE DESIGN ENHANCEMENTS ============ */
+/* Blueprint grid backdrop */
+.menu-grid {
+  position: absolute; inset: 0; z-index: 0; pointer-events: none; opacity: .5;
+  background-image:
+    linear-gradient(rgba(255,255,255,.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,.045) 1px, transparent 1px);
+  background-size: 42px 42px;
+  -webkit-mask-image: radial-gradient(ellipse 75% 70% at 50% 42%, #000 40%, transparent 78%);
+  mask-image: radial-gradient(ellipse 75% 70% at 50% 42%, #000 40%, transparent 78%);
+}
+/* Tech legend under the brand tag */
+.brand-tech {
+  margin-top: 12px; display: flex; align-items: center; justify-content: center; gap: 12px;
+  font: 700 8px var(--font-mono); letter-spacing: .22em; color: var(--text3); text-transform: uppercase;
+}
+.brand-tech i { width: 22px; height: 1px; background: linear-gradient(90deg, transparent, rgba(255,255,255,.4), transparent); }
+/* Menu keycap hints */
+.btn-key {
+  position: absolute; left: 10px; top: 50%; transform: translateY(-50%);
+  min-width: 20px; height: 20px; padding: 0 4px; display: inline-flex; align-items: center; justify-content: center;
+  font: 700 10px var(--font-mono); color: var(--text3);
+  border: 1px solid var(--border); border-bottom-width: 2px; border-radius: 5px;
+  background: rgba(255,255,255,.03); transition: color .2s, border-color .2s, background .2s;
+}
+.menu-nav .btn:hover .btn-key { color: var(--accent); border-color: var(--accent); background: rgba(255,255,255,.08); }
+.menu-nav .btn { padding-left: 40px; }
+/* Status LED strip in the footer */
+.menu-leds { display: flex; gap: 7px; align-items: center; padding: 0 4px; }
+.menu-leds i { width: 7px; height: 7px; border-radius: 50%; background: rgba(255,255,255,.14); }
+.menu-leds i:nth-child(1){ background:#4ef27e; box-shadow:0 0 8px #4ef27e; }
+.menu-leds i:nth-child(2){ background:#4ef27e; box-shadow:0 0 8px #4ef27e; }
+.menu-leds i:nth-child(3){ background:#4ef27e; box-shadow:0 0 8px #4ef27e; }
+.menu-leds i:nth-child(4){ background:#ffe27a; box-shadow:0 0 8px #ffe27a; animation:ledBlink 1.6s steps(2,end) infinite; }
+.menu-leds i:nth-child(5){ background:#8fd0ff; box-shadow:0 0 8px #8fd0ff; animation:ledBlink 2.1s steps(2,end) .3s infinite; }
+.menu-leds i:nth-child(6){ background:#ff8fa0; box-shadow:0 0 8px #ff8fa0; animation:ledBlink 2.6s steps(2,end) .6s infinite; }
+.menu-leds i:nth-child(7){ background:rgba(255,255,255,.14); }
+@keyframes ledBlink { 50% { opacity: .25; } }
+/* Board corner brackets (all four) */
+.board-corners { position: absolute; inset: 0; pointer-events: none; }
+.board-corners::before, .board-corners::after {
+  content:""; position: absolute; width: 22px; height: 22px; border: 1.5px solid rgba(255,255,255,.4); opacity:.7;
+}
+.board-corners::before { top: 8px; left: 8px; border-right:none; border-bottom:none; border-radius:4px 0 0 0; }
+.board-corners::after { bottom: 8px; right: 8px; border-left:none; border-top:none; border-radius:0 0 4px 0; }
+.board-corners i { position:absolute; width: 22px; height: 22px; border: 1.5px solid rgba(255,255,255,.4); opacity:.7; }
+.board-corners i:nth-child(1){ top:8px; right:8px; border-left:none; border-bottom:none; border-radius:0 4px 0 0; }
+.board-corners i:nth-child(2){ bottom:8px; left:8px; border-right:none; border-top:none; border-radius:0 0 0 4px; }
+/* Animated HUD top accent line */
+.hud::before {
+  content:""; position:absolute; top:0; left:0; right:0; height:2px; pointer-events:none;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,.6), var(--accent), rgba(255,255,255,.6), transparent);
+  animation: hudSweep 6s linear infinite; opacity:.6;
+}
+@keyframes hudSweep { 0% { transform:translateX(-100%); } 100% { transform:translateX(100%); } }
+/* HUD cell separators + subtle pulse on score */
+.hud { position: relative; }
+.hud-cell { position: relative; }
+.hud-cell:not(:last-child)::after {
+  content:""; position:absolute; right:-6px; top:20%; bottom:20%; width:1px;
+  background: linear-gradient(180deg, transparent, rgba(255,255,255,.18), transparent);
+}
+.hud-score { transition: color .2s; }
