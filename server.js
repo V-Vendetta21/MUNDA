@@ -46,6 +46,7 @@ function createLoomServer(options = {}) {
     if (!['GET', 'HEAD'].includes(req.method)) return sendJson(res, 405, { error: 'Method not allowed.' });
     let relative;
     try { relative = decodeURIComponent(requestUrl.pathname); } catch { return sendJson(res, 400, { error: 'Invalid path.' }); }
+    if (relative === '/index' || relative === '/.index') relative = '/index.html';
     if (relative.endsWith('/')) relative += 'index.html';
     const file = path.resolve(root, '.' + relative);
     if (file !== root && !file.startsWith(root + path.sep)) return sendJson(res, 403, { error: 'Forbidden.' });

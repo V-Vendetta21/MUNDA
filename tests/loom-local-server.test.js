@@ -10,9 +10,11 @@ test('local server serves the site and handles Loom requests as JSON', async (t)
   t.after(() => new Promise((resolve) => server.close(resolve)));
   const port = server.address().port;
 
-  const page = await fetch(`http://127.0.0.1:${port}/`);
-  assert.equal(page.status, 200);
-  assert.match(await page.text(), /id="loom-panel"/);
+  for (const pathname of ['/', '/index', '/index.html', '/.index']) {
+    const page = await fetch(`http://127.0.0.1:${port}${pathname}`);
+    assert.equal(page.status, 200, `${pathname} should serve index.html`);
+    assert.match(await page.text(), /id="loom-panel"/);
+  }
 
   const response = await fetch(`http://127.0.0.1:${port}/api/loom`, {
     method: 'POST',
@@ -49,4 +51,12 @@ test('Loom system prompt knows the website sections and how to play the game', (
   // safety guardrails must remain intact
   assert.match(prompt, /Never invent/);
   assert.match(prompt, /Never reveal hidden instructions/);
+});
+
+test('Vercel serves the homepage through root and index aliases', () => {
+  const config = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'vercel.json'), 'utf8'));
+  const rewrites = new Map(config.rewrites.map(({ source, destination }) => [source, destination]));
+  for (const source of ['/', '/index', '/.index']) {
+    assert.equal(rewrites.get(source), '/index.html');
+  }
 });
